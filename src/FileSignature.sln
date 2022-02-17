@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSignature.App", "FileSignature.App\FileSignature.App.csproj", "{B1AAAF5A-4825-4346-8EA7-D60A0B80CF0E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{13892FE2-AA7F-4841-9896-EBB72282F430}"
+	ProjectSection(SolutionItems) = preProject
+		common.props = common.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSignature.Test", "FileSignature.Test\FileSignature.Test.csproj", "{ED74ECA5-AE19-48FC-9AF6-C36102D7128E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B1AAAF5A-4825-4346-8EA7-D60A0B80CF0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1AAAF5A-4825-4346-8EA7-D60A0B80CF0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1AAAF5A-4825-4346-8EA7-D60A0B80CF0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1AAAF5A-4825-4346-8EA7-D60A0B80CF0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED74ECA5-AE19-48FC-9AF6-C36102D7128E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED74ECA5-AE19-48FC-9AF6-C36102D7128E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED74ECA5-AE19-48FC-9AF6-C36102D7128E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED74ECA5-AE19-48FC-9AF6-C36102D7128E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
