@@ -6,4 +6,11 @@
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
+	<!-- Build application as single trimmed executable on release mode. -->
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<PublishSingleFile>true</PublishSingleFile>
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+	</PropertyGroup>
+
 </Project>
