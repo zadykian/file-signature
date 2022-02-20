@@ -9,4 +9,4 @@ namespace FileSignature.App.Reader;
 /// <param name="Content">
 /// File block's content.
 /// </param>
-internal readonly record struct FileBlock(uint Index, byte[] Content);
+internal readonly record struct FileBlock(uint Index, ArraySegment<byte> Content);

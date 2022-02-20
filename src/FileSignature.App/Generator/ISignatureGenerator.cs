@@ -15,7 +15,6 @@ internal interface ISignatureGenerator
 	/// </param>
 	/// <returns>
 	/// Sequence of calculated hash-codes (one for each block).
-	/// Block size is determined by <see crGenParametersnput.BlockSize"/> value.
 	/// </returns>
 	IEnumerable<FileBlockHash> Generate(IEnumerable<FileBlock> fileBlocks);
 }
