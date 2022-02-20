@@ -1,16 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="$(MSBuildThisFileDirectory)\..\common.props"/>
+	<Import Project="$(MSBuildThisFileDirectory)\..\common.props" />
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
+		<Version>1.0.0</Version>
 	</PropertyGroup>
 
 	<!-- Build application as single trimmed executable on release mode. -->
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<AssemblyName>signature</AssemblyName>
 		<PublishSingleFile>true</PublishSingleFile>
 		<PublishTrimmed>true</PublishTrimmed>
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
 		<TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+		<!-- ConsoleAppFramework library is not annotated for trimming,
+			 which leads to warnings, but does not cause any runtime errors. -->
+		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
+		<PackageReference Include="TypeDecorators" Version="1.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Include=".properties\AssemblyInfo.cs" />
+	</ItemGroup>
 
 </Project>
