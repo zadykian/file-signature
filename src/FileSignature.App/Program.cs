@@ -1,4 +1,5 @@
 ﻿using FileSignature.App.Generator;
+using FileSignature.App.Reader;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileSignature.App;
@@ -15,6 +16,7 @@ internal static class Program
 		=> ConsoleApp
 			.CreateBuilder(args)
 			.ConfigureServices(services => services
+				.AddSingleton<IInputReader, InputReader>()
 				.AddSingleton<ISignatureGenerator, SignatureGenerator>())
 			.Build()
 			.AddCommands<AppCommands>()

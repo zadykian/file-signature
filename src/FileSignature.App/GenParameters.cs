@@ -1,7 +1,7 @@
 namespace FileSignature.App;
 
 /// <summary>
-/// Input data for file signature generation algorithm.
+/// Input parameters for file signature generation algorithm.
 /// </summary>
 /// <param name="FilePath">
 /// Path to file.
@@ -9,4 +9,4 @@ namespace FileSignature.App;
 /// <param name="BlockSize">
 /// Size of single block to generate hash code of.
 /// </param>
-public readonly record struct GenSignatureInput(string FilePath, Memory BlockSize);
+internal readonly record struct GenParameters(string FilePath, Memory BlockSize);

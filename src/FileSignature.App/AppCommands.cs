@@ -39,8 +39,10 @@ internal class AppCommands : ConsoleAppBase
 	/// <returns>
 	/// Input data for file signature generation algorithm.
 	/// </returns>
-	/// <exception cref="ArgumentException"></exception>
-	private static GenSignatureInput ParseInput(string filePath, string blockSize)
+	/// <exception cref="ArgumentException">
+	/// Either <paramref name="filePath"/> or <paramref name="blockSize"/> has invalid format or value.
+	/// </exception>
+	private static GenParameters ParseInput(string filePath, string blockSize)
 	{
 		if (string.IsNullOrWhiteSpace(filePath))
 		{
@@ -57,6 +59,6 @@ internal class AppCommands : ConsoleAppBase
 			throw new ArgumentException("Block size value must belong to range [4kB .. 64MB].");
 		}
 
-		return new GenSignatureInput(filePath, memory.Value);
+		return new GenParameters(filePath, memory.Value);
 	}
 }

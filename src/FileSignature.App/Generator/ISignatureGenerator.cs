@@ -1,3 +1,5 @@
+using FileSignature.App.Reader;
+
 namespace FileSignature.App.Generator;
 
 /// <summary>
@@ -6,14 +8,14 @@ namespace FileSignature.App.Generator;
 internal interface ISignatureGenerator
 {
 	/// <summary>
-	/// Generate signature of file based on input <paramref name="genSignatureInput"/>.
+	/// Generate signature of file based on input <paramref name="fileBlocks"/>.
 	/// </summary>
-	/// <param name="genSignatureInput">
-	/// Input data for file signature generation algorithm.
+	/// <param name="fileBlocks">
+	/// File splitted into sequential blocks.
 	/// </param>
 	/// <returns>
 	/// Sequence of calculated hash-codes (one for each block).
-	/// Block size is determined by <see cref="GenSignatureInput.BlockSize"/> value.
+	/// Block size is determined by <see crGenParametersnput.BlockSize"/> value.
 	/// </returns>
-	IEnumerable<FileBlockHash> Generate(GenSignatureInput genSignatureInput);
+	IEnumerable<FileBlockHash> Generate(IEnumerable<FileBlock> fileBlocks);
 }
