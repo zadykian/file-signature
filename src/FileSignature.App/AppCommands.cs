@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace FileSignature.App;
 
 // ReSharper disable ArgumentsStyleStringLiteral
@@ -10,10 +8,6 @@ namespace FileSignature.App;
 /// </summary>
 internal class AppCommands : ConsoleAppBase
 {
-	private readonly ILogger<AppCommands> logger;
-
-	public AppCommands(ILogger<AppCommands> logger) => this.logger = logger;
-
 	/// <summary>
 	/// Generate signature of file <paramref name="filePath"/>
 	/// using <paramref name="blockSize"/> as size of single block. 
@@ -24,7 +18,6 @@ internal class AppCommands : ConsoleAppBase
 		[Option(shortName: "b", description: "Size of single block [4kB .. 64MB].")] string blockSize = "1MB")
 	{
 		var input = ParseInput(filePath, blockSize);
-		logger.LogInformation(input.ToString());
 	}
 
 	/// <summary>

@@ -19,17 +19,19 @@ internal class InputReader : IInputReader
 
 		while (true)
 		{
-			var buffer = ArrayPool<byte>.Shared.Rent((int)genParameters.BlockSize.TotalBytes);
+			var bytesCount = (int)genParameters.BlockSize.TotalBytes;
+			var buffer = new ArraySegment<byte>(ArrayPool<byte>.Shared.Rent(bytesCount), offset: 0, count: bytesCount);
+
 			var bytesReadCount = inputStream.Read(buffer);
 
 			if (!ShouldContinue(genParameters, bytesReadCount, ref consumed))
 			{
-				ArrayPool<byte>.Shared.Return(buffer);
+				ArrayPool<byte>.Shared.Return(buffer.Array!);
 				logger.LogInformation("End of file is reached.");
 				yield break;
 			}
 
-			var content = new ArraySegment<byte>(buffer, 0, bytesReadCount);
+			var content = buffer[..bytesReadCount];
 			yield return new FileBlock(currentIndex, content);
 			currentIndex++;
 		}
@@ -44,11 +46,11 @@ internal class InputReader : IInputReader
 	/// <exception cref="InvalidOperationException">
 	/// Raised in case when file <see cref="GenParameters.FilePath"/> is empty.
 	/// </exception>
-	private static bool ShouldContinue(GenParameters genParameters, int bytesReadCount, ref bool consumed)
+	private bool ShouldContinue(GenParameters genParameters, int bytesReadCount, ref bool consumed)
 	{
 		if (bytesReadCount == 0 && !consumed)
 		{
-			throw new InvalidOperationException($"File '{genParameters.FilePath}' is empty.");
+			logger.LogWarning("File '{FilePath}' is empty.", genParameters.FilePath);
 		}
 
 		consumed = true;
