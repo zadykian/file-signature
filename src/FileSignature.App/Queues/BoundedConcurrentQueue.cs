@@ -1,5 +1,3 @@
-using FileSignature.App.Queues.Base;
-
 namespace FileSignature.App.Queues;
 
 /// <summary>
@@ -8,31 +6,7 @@ namespace FileSignature.App.Queues;
 /// <typeparam name="T">
 /// Type of elements.
 /// </typeparam>
-internal class BoundedConcurrentQueue<T> : ISink<T>, ISource<T>
+internal class BoundedConcurrentQueue<T>
 {
 	// todo
-
-	/// <inheritdoc />
-	void ISink<T>.Push(T item)
-	{
-		throw new NotImplementedException();
-	}
-
-	/// <inheritdoc />
-	void ISink<T>.Complete()
-	{
-		throw new NotImplementedException();
-	}
-
-	/// <inheritdoc />
-	bool ISource<T>.ShouldPullNext()
-	{
-		throw new NotImplementedException();
-	}
-
-	/// <inheritdoc />
-	T ISource<T>.Pull()
-	{
-		throw new NotImplementedException();
-	}
 }

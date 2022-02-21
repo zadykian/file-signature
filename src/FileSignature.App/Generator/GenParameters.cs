@@ -1,4 +1,4 @@
-namespace FileSignature.App;
+namespace FileSignature.App.Generator;
 
 /// <summary>
 /// Input parameters for file signature generation algorithm.

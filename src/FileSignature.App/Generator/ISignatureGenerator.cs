@@ -1,5 +1,3 @@
-using FileSignature.App.Reader;
-
 namespace FileSignature.App.Generator;
 
 /// <summary>
@@ -8,13 +6,16 @@ namespace FileSignature.App.Generator;
 internal interface ISignatureGenerator
 {
 	/// <summary>
-	/// Generate signature of file based on input <paramref name="fileBlocks"/>.
+	/// Generate signature of file based on input <paramref name="genParameters"/>.
 	/// </summary>
-	/// <param name="fileBlocks">
-	/// File splitted into sequential blocks.
+	/// <param name="genParameters">
+	/// Input parameters for file signature generation algorithm.
+	/// </param>
+	/// <param name="cancellationToken">
+	/// Token to cancel an operation.
 	/// </param>
 	/// <returns>
 	/// Sequence of calculated hash-codes (one for each block).
 	/// </returns>
-	IEnumerable<FileBlockHash> Generate(IEnumerable<FileBlock> fileBlocks);
+	IEnumerable<FileBlockHash> Generate(GenParameters genParameters, CancellationToken cancellationToken);
 }

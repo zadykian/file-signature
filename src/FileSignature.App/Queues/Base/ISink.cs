@@ -3,7 +3,7 @@ namespace FileSignature.App.Queues.Base;
 /// <summary>
 /// Destination for items of type <typeparamref name="T"/>.
 /// </summary>
-public interface ISink<in T>
+internal interface ISink<in T>
 {
 	/// <summary>
 	/// Add item into sink.

@@ -1,3 +1,5 @@
+using FileSignature.App.Generator;
+
 namespace FileSignature.App.Reader;
 
 /// <summary>
@@ -11,8 +13,11 @@ internal interface IInputReader
 	/// <param name="genParameters">
 	/// Input parameters for file signature generation algorithm.
 	/// </param>
+	/// <param name="cancellationToken">
+	/// Token to cancel an operation.
+	/// </param>
 	/// <returns>
 	/// File splitted into sequential blocks.
 	/// </returns>
-	IEnumerable<FileBlock> Read(GenParameters genParameters);
+	IEnumerable<FileBlock> Read(GenParameters genParameters, CancellationToken cancellationToken);
 }

@@ -1,18 +1,31 @@
-using System.Buffers;
-using System.Security.Cryptography;
 using FileSignature.App.Reader;
 
 namespace FileSignature.App.Generator;
 
+internal interface IBackgroundWorkers
+{
+	void Enqueue(Action workUnit, byte degreeOfParallelism);
+}
+
 /// <inheritdoc />
 internal class SignatureGenerator : ISignatureGenerator
 {
-	/// <inheritdoc />
-	IEnumerable<FileBlockHash> ISignatureGenerator.Generate(IEnumerable<FileBlock> fileBlocks)
+	private readonly IInputReader inputReader;
+
+	public SignatureGenerator(IInputReader inputReader)
 	{
-		var outputBuffer = ArrayPool<byte>.Shared.Rent(32);
-		using var sha256 = SHA256.Create();
-		sha256.TryComputeHash(fileBlocks.First().Content, outputBuffer, out _);
+		this.inputReader = inputReader;
+	}
+
+	/// <inheritdoc />
+	IEnumerable<FileBlockHash> ISignatureGenerator.Generate(
+		GenParameters genParameters,
+		CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+
+		inputReader
+			.Read(genParameters, cancellationToken);
 
 
 		// todo

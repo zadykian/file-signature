@@ -1,17 +1,20 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FileSignature.App.Queues.Base;
 
 /// <summary>
 /// Source of items of type <typeparamref name="T"/>.
 /// </summary>
-public interface ISource<out T>
+internal interface ISource<T>
 {
 	/// <summary>
-	/// Determine if will there be more elements to pull. 
+	/// Try pull element from source.
 	/// </summary>
-	bool ShouldPullNext();
-
-	/// <summary>
-	/// Pull element from source.
-	/// </summary>
-	T Pull();
+	/// <param name="item">
+	/// Pulled item.
+	/// </param>
+	/// <returns>
+	/// <c>true</c> if item is pulled, otherwise - <c>false</c>. 
+	/// </returns>
+	bool TryPull([NotNullWhen(returnValue: true)] out T? item);
 }

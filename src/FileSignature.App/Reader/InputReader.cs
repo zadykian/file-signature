@@ -1,4 +1,5 @@
 using System.Buffers;
+using FileSignature.App.Generator;
 using Microsoft.Extensions.Logging;
 
 namespace FileSignature.App.Reader;
@@ -11,14 +12,17 @@ internal class InputReader : IInputReader
 	public InputReader(ILogger<InputReader> logger) => this.logger = logger;
 
 	/// <inheritdoc />
-	IEnumerable<FileBlock> IInputReader.Read(GenParameters genParameters)
+	IEnumerable<FileBlock> IInputReader.Read(GenParameters genParameters, CancellationToken cancellationToken)
 	{
+		cancellationToken.ThrowIfCancellationRequested();
+
 		using var inputStream = CreateInputStream(genParameters);
 		var consumed = false;
 		uint currentIndex = 0;
 
 		while (true)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			var bytesCount = (int)genParameters.BlockSize.TotalBytes;
 			var buffer = new ArraySegment<byte>(ArrayPool<byte>.Shared.Rent(bytesCount), offset: 0, count: bytesCount);
 
@@ -31,8 +35,7 @@ internal class InputReader : IInputReader
 				yield break;
 			}
 
-			var content = buffer[..bytesReadCount];
-			yield return new FileBlock(currentIndex, content);
+			yield return new FileBlock(currentIndex, buffer[..bytesReadCount]);
 			currentIndex++;
 		}
 	}
