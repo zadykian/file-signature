@@ -1,3 +1,5 @@
+using FileSignature.App.Queues.Base;
+
 namespace FileSignature.App.Generator;
 
 /// <summary>
@@ -9,4 +11,8 @@ namespace FileSignature.App.Generator;
 /// <param name="HashCode">
 /// Hash code value generated based on file's block.
 /// </param>
-internal readonly record struct FileBlockHash(uint Index, byte[] HashCode);
+internal readonly record struct FileBlockHash(uint Index, byte[] HashCode) : IHasPriority
+{
+	/// <inheritdoc />
+	uint IHasPriority.Priority => Index;
+}

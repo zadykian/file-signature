@@ -70,7 +70,7 @@ internal class InputReader : IInputReader
 
 		if (!File.Exists(filePath))
 		{
-			throw new FileNotFoundException($"File {filePath} does not exist.");
+			throw new FileNotFoundException($"File '{filePath}' does not exist.");
 		}
 
 		try
