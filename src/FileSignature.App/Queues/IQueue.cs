@@ -1,25 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace FileSignature.App.Queues;
 
 /// <summary>
-/// Source of items of type <typeparamref name="T"/>.
+/// Queue of items of type <typeparamref name="T"/>.
 /// </summary>
-internal interface IQueueBase<T>
+internal interface IQueueBase<out T>
 {
 	/// <summary>
-	/// Try pull element from source.
-	/// </summary>
-	/// <param name="item">
-	/// Pulled item.
-	/// </param>
-	/// <returns>
-	/// <c>true</c> if item is pulled, otherwise - <c>false</c>. 
-	/// </returns>
-	bool TryPull([NotNullWhen(returnValue: true)] out T? item);
-
-	/// <summary>
-	/// Set that queue won't be filled again.
+	/// Set that queue won't be filled with items again.
 	/// </summary>
 	void Complete();
 
@@ -32,9 +19,7 @@ internal interface IQueueBase<T>
 	IEnumerable<T> ConsumeAsEnumerable(CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Queue.
-/// </summary>
+/// <inheritdoc />
 internal interface IQueue<T> : IQueueBase<T>
 {
 	/// <summary>

@@ -35,10 +35,14 @@ internal class SignatureGenerator : ISignatureGenerator
 
 		// Consume file content as sequence of blocks and push each block to fileBlockQueue.
 
-		backgroundWorker.Enqueue(
-			() => inputReader
+		backgroundWorker.Enqueue(() =>
+		{
+			inputReader
 				.Read(genParameters, cancellationToken)
-				.ForEach(fileBlockQueue.Push));
+				.ForEach(fileBlockQueue.Push);
+
+			fileBlockQueue.Complete();
+		});
 
 		// Consume data from fileBlockQueue, calculate hash codes in parallel and push results to blockHashQueue.
 
@@ -77,5 +81,7 @@ internal class SignatureGenerator : ISignatureGenerator
 				fileBlock.Dispose();
 			}
 		}
+
+		// todo: call blockHashQueue.Complete()
 	}
 }

@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace FileSignature.App.Queues;
 
 /// <summary>
@@ -13,7 +11,7 @@ internal class BoundedConcurrentPriorityQueue<T> : IPriorityQueue<T>
 	// todo
 
 	/// <inheritdoc />
-	bool IQueueBase<T>.TryPull([NotNullWhen(returnValue: true)] out T? item)
+	void IPriorityQueue<T>.Push(T item, uint priority)
 	{
 		throw new NotImplementedException();
 	}
@@ -26,12 +24,6 @@ internal class BoundedConcurrentPriorityQueue<T> : IPriorityQueue<T>
 
 	/// <inheritdoc />
 	IEnumerable<T> IQueueBase<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	/// <inheritdoc />
-	void IPriorityQueue<T>.Push(T item, uint priority)
 	{
 		throw new NotImplementedException();
 	}

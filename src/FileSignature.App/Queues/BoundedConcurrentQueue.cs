@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace FileSignature.App.Queues;
 
 /// <summary>
@@ -12,8 +10,9 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 {
 	// todo
 
+
 	/// <inheritdoc />
-	bool IQueueBase<T>.TryPull([NotNullWhen(returnValue: true)] out T? item)
+	void IQueue<T>.Push(T item)
 	{
 		throw new NotImplementedException();
 	}
@@ -26,12 +25,6 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 
 	/// <inheritdoc />
 	IEnumerable<T> IQueueBase<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
-	}
-
-	/// <inheritdoc />
-	void IQueue<T>.Push(T item)
 	{
 		throw new NotImplementedException();
 	}
