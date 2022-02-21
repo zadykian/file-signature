@@ -1,41 +1,69 @@
 using System.Security.Cryptography;
 using FileSignature.App.Queues;
 using FileSignature.App.Reader;
-using FileSignature.App.Worker;
+using FileSignature.App.Scheduler;
 
 namespace FileSignature.App.Generator;
 
 /// <inheritdoc />
 internal class SignatureGenerator : ISignatureGenerator
 {
+	/// <summary>
+	/// Number of workers to perform hashcode calculations.
+	/// </summary>
+	private static readonly byte hashWorkersCount = (byte) Environment.ProcessorCount;
+
+	/// <summary>
+	/// Event which represents completion of multithreading hash calculation process.
+	/// </summary>
+	private readonly CountdownEvent completeBlockHashQueueEvent = new(hashWorkersCount);
+
 	private readonly IInputReader inputReader;
-	private readonly IBackgroundWorker backgroundWorker;
+	private readonly IWorkScheduler workScheduler;
 
 	private readonly IQueue<IndexedSegment> fileBlockQueue;
 	private readonly IPriorityQueue<IndexedSegment> blockHashQueue;
 
 	public SignatureGenerator(
 		IInputReader inputReader,
-		IBackgroundWorker backgroundWorker,
+		IWorkScheduler workScheduler,
 		IQueue<IndexedSegment> fileBlockQueue,
 		IPriorityQueue<IndexedSegment> blockHashQueue)
 	{
 		this.inputReader = inputReader;
-		this.backgroundWorker = backgroundWorker;
+		this.workScheduler = workScheduler;
 		this.fileBlockQueue = fileBlockQueue;
 		this.blockHashQueue = blockHashQueue;
 	}
 
 	/// <inheritdoc />
 	IEnumerable<IndexedSegment> ISignatureGenerator.Generate(
-		GenParameters genParameters,
+		GenParameters genParameters, 
 		CancellationToken cancellationToken)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 
 		// Consume file content as sequence of blocks and push each block to fileBlockQueue.
+		RunFileConsumptionProcess(genParameters, cancellationToken);
 
-		backgroundWorker.Enqueue(() =>
+		// Consume data from fileBlockQueue, calculate hash codes and push values to blockHashQueue.
+		RunHashCalculationProcess(cancellationToken);
+
+		// Consume hash values from blockHashQueue on current thread.
+		return blockHashQueue.ConsumeAsEnumerable(cancellationToken);
+	}
+
+	/// <summary>
+	/// Run file consumption process in background.
+	/// </summary>
+	/// <param name="genParameters">
+	/// Input parameters for file signature generation algorithm.
+	/// </param>
+	/// <param name="cancellationToken">
+	/// Token to cancel an operation.
+	/// </param>
+	private void RunFileConsumptionProcess(GenParameters genParameters, CancellationToken cancellationToken)
+		=> workScheduler.RunInBackground(() =>
 		{
 			inputReader
 				.Read(genParameters, cancellationToken)
@@ -44,15 +72,27 @@ internal class SignatureGenerator : ISignatureGenerator
 			fileBlockQueue.Complete();
 		});
 
+	/// <summary>
+	/// Run hash calculation process in background.
+	/// </summary>
+	/// <param name="cancellationToken">
+	/// Token to cancel an operation.
+	/// </param>
+	private void RunHashCalculationProcess(CancellationToken cancellationToken)
+	{
 		// Consume data from fileBlockQueue, calculate hash codes in parallel and push results to blockHashQueue.
 
-		backgroundWorker.Enqueue(
+		workScheduler.RunInBackground(
 			() => HashGenerationWorkItem(cancellationToken),
-			(byte)Environment.ProcessorCount);
+			hashWorkersCount);
 
-		// Consume hash values from queue on current thread.
+		// Wait for calculation completion in background and then set blockHashQueue as completed.
 
-		return blockHashQueue.ConsumeAsEnumerable(cancellationToken);
+		workScheduler.RunInBackground(() =>
+		{
+			completeBlockHashQueueEvent.Wait(cancellationToken);
+			blockHashQueue.Complete();
+		});
 	}
 
 	/// <summary>
@@ -82,6 +122,6 @@ internal class SignatureGenerator : ISignatureGenerator
 			}
 		}
 
-		// todo: call blockHashQueue.Complete()
+		completeBlockHashQueueEvent.Signal();
 	}
 }

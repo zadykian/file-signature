@@ -1,7 +1,7 @@
 ﻿using FileSignature.App.Generator;
 using FileSignature.App.Queues;
 using FileSignature.App.Reader;
-using FileSignature.App.Worker;
+using FileSignature.App.Scheduler;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileSignature.App;
@@ -28,7 +28,7 @@ internal static class Program
 	private static void RegisterServices(IServiceCollection services)
 		=> services
 			.AddSingleton<IInputReader, InputReader>()
-			.AddSingleton<IBackgroundWorker, ThreadsBackgroundWorker>()
+			.AddSingleton<IWorkScheduler, ThreadWorkScheduler>()
 			.AddSingleton<IQueue<IndexedSegment>, BoundedConcurrentQueue<IndexedSegment>>()
 			.AddSingleton<IPriorityQueue<IndexedSegment>, BoundedConcurrentPriorityQueue<IndexedSegment>>()
 			.AddSingleton<ISignatureGenerator, SignatureGenerator>();
