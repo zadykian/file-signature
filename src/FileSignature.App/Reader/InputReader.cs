@@ -1,4 +1,3 @@
-using System.Buffers;
 using FileSignature.App.Generator;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +11,7 @@ internal class InputReader : IInputReader
 	public InputReader(ILogger<InputReader> logger) => this.logger = logger;
 
 	/// <inheritdoc />
-	IEnumerable<FileBlock> IInputReader.Read(GenParameters genParameters, CancellationToken cancellationToken)
+	IEnumerable<IndexedSegment> IInputReader.Read(GenParameters genParameters, CancellationToken cancellationToken)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 
@@ -23,19 +22,31 @@ internal class InputReader : IInputReader
 		while (true)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			var bytesCount = (int)genParameters.BlockSize.TotalBytes;
-			var buffer = new ArraySegment<byte>(ArrayPool<byte>.Shared.Rent(bytesCount), offset: 0, count: bytesCount);
 
-			var bytesReadCount = inputStream.Read(buffer);
+			var fileBlock = new IndexedSegment(currentIndex, genParameters.BlockSize);
+			int bytesReadCount;
+
+			try
+			{
+				bytesReadCount = inputStream.Read(fileBlock.Content);
+			}
+			catch
+			{
+				fileBlock.Dispose();
+				throw;
+			}
 
 			if (!ShouldContinue(genParameters, bytesReadCount, ref consumed))
 			{
-				ArrayPool<byte>.Shared.Return(buffer.Array!);
+				fileBlock.Dispose();
 				logger.LogInformation("End of file is reached.");
 				yield break;
 			}
 
-			yield return new FileBlock(currentIndex, buffer[..bytesReadCount]);
+			// Last block of file can be smaller than GenParameters.BlockSize,
+			// so we are trimming ArraySegment with bytesReadCount value.
+
+			yield return fileBlock with { Content = fileBlock.Content[..bytesReadCount] };
 			currentIndex++;
 		}
 	}

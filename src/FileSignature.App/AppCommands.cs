@@ -27,15 +27,14 @@ internal class AppCommands : ConsoleAppBase
 	[Command(commandName: "generate", description: "Generate signature of file using specified block size.")]
 	public void GenerateSignature(
 		[Option(shortName: "f", description: "Path to file.")]                       string filePath,
-		[Option(shortName: "w", description: "Number of workers.")]                  byte? workersCount,
 		[Option(shortName: "b", description: "Size of single block [4kB .. 64MB].")] string blockSize = "1MB")
-	{
-		var input = ParseInput(filePath, blockSize);
-
-		signatureGenerator
-			.Generate(input, Context.CancellationToken)
-			.ForEach(block => logger.LogTrace(block.ToString()));
-	}
+		=> signatureGenerator
+			.Generate(ParseInput(filePath, blockSize), Context.CancellationToken)
+			.ForEach(block =>
+			{
+				logger.LogTrace(block.ToString());
+				block.Dispose();
+			});
 
 	/// <summary>
 	/// Parse and validate CLI parameters (<paramref name="filePath"/>, <paramref name="blockSize"/>).
