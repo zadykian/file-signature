@@ -11,8 +11,15 @@ namespace FileSignature.Test;
 /// </summary>
 public class InputReaderTests : TestBase
 {
+	/// <summary>
+	/// Name of temporary directory for test files.
+	/// Being recreated on each test cycle.
+	/// </summary>
 	private const string tempDirName = "temp-test-files";
 
+	/// <summary>
+	/// Map from file size to its' full path.
+	/// </summary>
 	private static readonly IDictionary<Memory, string> pathBySize = new[]
 		{
 			Memory.Zero,
@@ -78,7 +85,7 @@ public class InputReaderTests : TestBase
 		var genParams = new GenParameters(pathBySize[Memory.Zero], Memory.Kilobyte);
 
 		var result = reader.Read(genParams);
-		Assert.IsEmpty(result);
+		Assert.IsEmpty(result, "Resulting sequence is expected to be empty!");
 	}
 
 	/// <summary>
@@ -94,8 +101,13 @@ public class InputReaderTests : TestBase
 
 		var result = reader.Read(genParams).ToArray();
 
-		Assert.AreEqual(expected: 1, actual: result.Length);
-		Assert.AreEqual(expected: fileSize.TotalBytes, actual: result[0].Content.Count);
+		Assert.AreEqual(
+			expected: 1, actual: result.Length,
+			"Resulting sequence is expected to contain single block!");
+
+		Assert.AreEqual(
+			expected: fileSize.TotalBytes, actual: result[0].Content.Count,
+			"File's block has unexpected size!");
 	}
 
 	/// <summary>
