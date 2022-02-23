@@ -8,9 +8,7 @@ internal class ThreadWorkScheduler : IWorkScheduler
 	private readonly ILifetimeManager lifetimeManager;
 	private readonly ILogger<ThreadWorkScheduler> logger;
 
-	public ThreadWorkScheduler(
-		ILifetimeManager lifetimeManager,
-		ILogger<ThreadWorkScheduler> logger)
+	public ThreadWorkScheduler(ILifetimeManager lifetimeManager, ILogger<ThreadWorkScheduler> logger)
 	{
 		this.lifetimeManager = lifetimeManager;
 		this.logger = logger;

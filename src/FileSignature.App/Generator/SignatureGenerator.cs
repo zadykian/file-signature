@@ -67,7 +67,7 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 		{
 			inputReader
 				.Read(genParameters, cancellationToken)
-				.ForEach(fileBlockQueue.Push);
+				.ForEach(item => fileBlockQueue.Push(item, cancellationToken));
 
 			fileBlockQueue.Complete();
 		});
@@ -114,7 +114,7 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 				cancellationToken.ThrowIfCancellationRequested();
 				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize * Memory.Byte);
 				sha256.TryComputeHash(fileBlock.Content, hashCodeBlock.Content, out _);
-				blockHashQueue.Push(hashCodeBlock, hashCodeBlock.Index);
+				blockHashQueue.Push(hashCodeBlock, hashCodeBlock.Index, cancellationToken);
 			}
 			finally
 			{

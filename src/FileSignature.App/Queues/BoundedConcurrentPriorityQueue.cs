@@ -7,11 +7,12 @@ namespace FileSignature.App.Queues;
 /// Type of elements.
 /// </typeparam>
 internal class BoundedConcurrentPriorityQueue<T> : IPriorityQueue<T>, IDisposable
+	where T : notnull
 {
 	// todo
 
 	/// <inheritdoc />
-	void IPriorityQueue<T>.Push(T item, uint priority)
+	void IPriorityQueue<T>.Push(T item, uint priority, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
