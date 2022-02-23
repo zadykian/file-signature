@@ -14,6 +14,15 @@ namespace FileSignature.App.Reader;
 internal readonly record struct IndexedSegment(uint Index, ArraySegment<byte> Content) : IDisposable
 {
 	/// <summary>
+	/// Rent <see cref="ArraySegment{Byte}"/> from <see cref="ArrayPool{Byte}"/>.
+	/// </summary>
+	private static ArraySegment<byte> Rent(Memory blockSize)
+		=> new(
+			array:  ArrayPool<byte>.Shared.Rent((int)blockSize.TotalBytes),
+			offset: 0,
+			count:  (int)blockSize.TotalBytes);
+
+	/// <summary>
 	/// Create new <see cref="IndexedSegment"/> instance.
 	/// </summary>
 	/// <param name="index">
@@ -34,13 +43,4 @@ internal readonly record struct IndexedSegment(uint Index, ArraySegment<byte> Co
 	/// Return underlying array to <see cref="ArrayPool{Byte}"/>.
 	/// </remarks>
 	public void Dispose() => ArrayPool<byte>.Shared.Return(Content.Array!);
-
-	/// <summary>
-	/// Rent <see cref="ArraySegment{Byte}"/> from <see cref="ArrayPool{Byte}"/>.
-	/// </summary>
-	private static ArraySegment<byte> Rent(Memory blockSize)
-		=> new(
-			ArrayPool<byte>.Shared.Rent((int)blockSize.TotalBytes),
-			offset: 0,
-			count: (int)blockSize.TotalBytes);
 }

@@ -19,5 +19,5 @@ internal interface ISignatureGenerator
 	/// <returns>
 	/// Sequence of calculated hash-codes (one for each block).
 	/// </returns>
-	IEnumerable<IndexedSegment> Generate(GenParameters genParameters, CancellationToken cancellationToken);
+	IEnumerable<IndexedSegment> Generate(GenParameters genParameters, CancellationToken cancellationToken = default);
 }

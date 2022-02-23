@@ -6,7 +6,7 @@ namespace FileSignature.App.Queues;
 /// <typeparam name="T">
 /// Type of elements.
 /// </typeparam>
-internal class BoundedConcurrentQueue<T> : IQueue<T>
+internal class BoundedConcurrentQueue<T> : IQueue<T>, IDisposable
 {
 	// todo
 
@@ -25,6 +25,12 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 
 	/// <inheritdoc />
 	IEnumerable<T> IQueueBase<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	/// <inheritdoc />
+	void IDisposable.Dispose()
 	{
 		throw new NotImplementedException();
 	}

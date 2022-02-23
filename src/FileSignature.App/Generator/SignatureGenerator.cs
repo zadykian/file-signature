@@ -5,8 +5,8 @@ using FileSignature.App.Scheduler;
 
 namespace FileSignature.App.Generator;
 
-/// <inheritdoc />
-internal class SignatureGenerator : ISignatureGenerator
+/// <inheritdoc cref="ISignatureGenerator" />
+internal class SignatureGenerator : ISignatureGenerator, IDisposable
 {
 	/// <summary>
 	/// Number of workers to perform hashcode calculations.
@@ -49,7 +49,7 @@ internal class SignatureGenerator : ISignatureGenerator
 		// Consume data from fileBlockQueue, calculate hash codes and push values to blockHashQueue.
 		RunHashCalculationProcess(cancellationToken);
 
-		// Consume hash values from blockHashQueue on current thread.
+		// Consume hash values from blockHashQueue in foreground.
 		return blockHashQueue.ConsumeAsEnumerable(cancellationToken);
 	}
 
@@ -112,7 +112,7 @@ internal class SignatureGenerator : ISignatureGenerator
 			try
 			{
 				cancellationToken.ThrowIfCancellationRequested();
-				var hashCodeBlock = new IndexedSegment(fileBlock.Index, Memory.Bytes(sha256.HashSize));
+				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize * Memory.Byte);
 				sha256.TryComputeHash(fileBlock.Content, hashCodeBlock.Content, out _);
 				blockHashQueue.Push(hashCodeBlock, hashCodeBlock.Index);
 			}
@@ -124,4 +124,7 @@ internal class SignatureGenerator : ISignatureGenerator
 
 		completeBlockHashQueueEvent.Signal();
 	}
+
+	/// <inheritdoc />
+	void IDisposable.Dispose() => completeBlockHashQueueEvent.Dispose();
 }

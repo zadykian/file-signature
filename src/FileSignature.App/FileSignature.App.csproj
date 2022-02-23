@@ -25,8 +25,4 @@
 		<PackageReference Include="TypeDecorators" Version="1.0.1" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Compile Include=".properties\AssemblyInfo.cs" />
-	</ItemGroup>
-
 </Project>

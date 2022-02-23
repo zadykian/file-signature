@@ -19,5 +19,5 @@ internal interface IInputReader
 	/// <returns>
 	/// File splitted into sequential blocks.
 	/// </returns>
-	IEnumerable<IndexedSegment> Read(GenParameters genParameters, CancellationToken cancellationToken);
+	IEnumerable<IndexedSegment> Read(GenParameters genParameters, CancellationToken cancellationToken = default);
 }

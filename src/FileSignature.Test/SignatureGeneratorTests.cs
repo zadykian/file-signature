@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace FileSignature.Test;
 
 /// <summary>
-/// <see cref="ISignatureGenerator"/> tests.
+/// Tests of <see cref="ISignatureGenerator"/> component.
 /// </summary>
 [TestFixture]
 public class SignatureGeneratorTests

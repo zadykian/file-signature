@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace FileSignature.App.Scheduler;
@@ -6,14 +5,14 @@ namespace FileSignature.App.Scheduler;
 /// <inheritdoc />
 internal class ThreadWorkScheduler : IWorkScheduler
 {
-	private readonly IHostApplicationLifetime applicationLifetime;
+	private readonly ILifetimeManager lifetimeManager;
 	private readonly ILogger<ThreadWorkScheduler> logger;
 
 	public ThreadWorkScheduler(
-		IHostApplicationLifetime applicationLifetime,
+		ILifetimeManager lifetimeManager,
 		ILogger<ThreadWorkScheduler> logger)
 	{
-		this.applicationLifetime = applicationLifetime;
+		this.lifetimeManager = lifetimeManager;
 		this.logger = logger;
 	}
 
@@ -47,11 +46,19 @@ internal class ThreadWorkScheduler : IWorkScheduler
 			{
 				workItem();
 			}
+			catch (OperationCanceledException)
+			{
+				// If cancellation was requested, just terminate current worker thread.
+			}
 			catch (Exception e)
 			{
 				logger.LogError(e, "Error occured in background thread.");
-				// Gracefully shutdown application instead of unhandled exception.
-				applicationLifetime.StopApplication();
+
+				// It's considered that there is no reason to continue app execution if one of workers failed.
+				// So, instead of unhandled exception, graceful shutdown is initiated by
+				// requesting cancellation via CancellationToken objects propagated to other workers.
+
+				lifetimeManager.RequestAppCancellation();
 			}
 		}
 
