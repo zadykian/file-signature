@@ -14,26 +14,28 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	private static readonly byte hashWorkersCount = (byte) Environment.ProcessorCount;
 
 	/// <summary>
+	/// Max size for queues input and output queues.
+	/// </summary>
+	private static readonly ushort maxQueuesSize = (ushort) (4 * hashWorkersCount);
+
+	/// <summary>
 	/// Event which represents completion of multithreading hash calculation process.
 	/// </summary>
 	private readonly CountdownEvent completeBlockHashQueueEvent = new(hashWorkersCount);
 
+	private readonly IQueue<IndexedSegment> fileBlockQueue
+		= new BoundedConcurrentQueue<IndexedSegment>(maxQueuesSize);
+
+	private readonly IPriorityQueue<IndexedSegment> blockHashQueue
+		= new BoundedConcurrentPriorityQueue<IndexedSegment>(maxQueuesSize);
+
 	private readonly IInputReader inputReader;
 	private readonly IWorkScheduler workScheduler;
 
-	private readonly IQueue<IndexedSegment> fileBlockQueue;
-	private readonly IPriorityQueue<IndexedSegment> blockHashQueue;
-
-	public SignatureGenerator(
-		IInputReader inputReader,
-		IWorkScheduler workScheduler,
-		IQueue<IndexedSegment> fileBlockQueue,
-		IPriorityQueue<IndexedSegment> blockHashQueue)
+	public SignatureGenerator(IInputReader inputReader, IWorkScheduler workScheduler)
 	{
 		this.inputReader = inputReader;
 		this.workScheduler = workScheduler;
-		this.fileBlockQueue = fileBlockQueue;
-		this.blockHashQueue = blockHashQueue;
 	}
 
 	/// <inheritdoc />

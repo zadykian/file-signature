@@ -17,10 +17,10 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 	private readonly int maxSize;
 
 	private int currentSize;
-	private volatile Node head;
-	private volatile Node tail;
+	private Node head;
+	private Node tail;
 
-	private volatile bool isCompleted;
+	private bool isCompleted;
 
 	public BoundedConcurrentQueue(uint maxSize)
 	{
@@ -67,12 +67,20 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 	{
 		ThrowIfCompleted();
 		isCompleted = true;
+
+		// At this moment some readers may already be blocked by Monitor.Wait,
+		// so we are notifying them to complete ConsumeAsEnumerable operation.
+
+		lock (dequeueLock)
+		{
+			Monitor.PulseAll(dequeueLock);
+		}
 	}
 
 	/// <inheritdoc />
 	IEnumerable<T> IQueueBase<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
 	{
-		while (!isCompleted)
+		while (true)
 		{
 			if (TryPull(cancellationToken, out var pulledValue))
 			{
@@ -110,14 +118,14 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 		{
 			while (head.Next == null)
 			{
-				if (isCompleted)
+				if (Volatile.Read(ref isCompleted))
 				{
 					pulledValue = default;
 					return false;
 				}
 
 				cancellationToken.ThrowIfCancellationRequested();
-				Monitor.Wait(dequeueLock, TimeSpan.FromMilliseconds(50));
+				Monitor.Wait(dequeueLock);
 			}
 
 			pulledValue = head.Next.Value!;
@@ -168,6 +176,6 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 		/// <summary>
 		/// Next node in list.
 		/// </summary>
-		public volatile Node? Next;
+		public Node? Next;
 	}
 }

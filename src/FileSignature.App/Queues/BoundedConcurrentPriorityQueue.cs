@@ -11,6 +11,10 @@ internal class BoundedConcurrentPriorityQueue<T> : IPriorityQueue<T>, IDisposabl
 {
 	// todo
 
+	private readonly int maxSize;
+
+	public BoundedConcurrentPriorityQueue(uint maxSize) => this.maxSize = (int)maxSize;
+
 	/// <inheritdoc />
 	void IPriorityQueue<T>.Push(T item, uint priority, CancellationToken cancellationToken)
 	{
