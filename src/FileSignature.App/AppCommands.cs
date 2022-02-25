@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FileSignature.App.Generator;
 using Microsoft.Extensions.Logging;
 
@@ -69,5 +70,34 @@ internal class AppCommands : ConsoleAppBase
 		}
 
 		return new GenParameters(filePath, memory.Value);
+	}
+}
+
+/// <summary>
+/// Command filter which measures elapsed time.
+/// </summary>
+internal class ElapsedTimeFilter : ConsoleAppFilter
+{
+	private ElapsedTimeFilter()
+	{
+	}
+
+	/// <summary>
+	/// Instance of <see cref="ElapsedTimeFilter"/>.
+	/// </summary>
+	public static ConsoleAppFilter Instance { get; } = new ElapsedTimeFilter();
+
+	/// <inheritdoc />
+	public override async ValueTask Invoke(ConsoleAppContext context, Func<ConsoleAppContext, ValueTask> next)
+	{
+		var stopwatch = Stopwatch.StartNew();
+		try
+		{
+			await next(context);
+		}
+		finally
+		{
+			context.Logger.LogInformation(@"Elapsed time: {Elapsed:hh\:mm\:ss\.fff}", stopwatch.Elapsed);
+		}
 	}
 }

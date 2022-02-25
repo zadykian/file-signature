@@ -50,7 +50,7 @@ internal class ThreadWorkScheduler : IWorkScheduler
 			}
 			catch (Exception e)
 			{
-				logger.LogError(e, "Error occured in background thread.");
+				logger.LogError(e, "Error occured in background thread, requesting app termination.");
 
 				// It's considered that there is no reason to continue app execution if one of workers failed.
 				// So, instead of unhandled exception, graceful shutdown is initiated by

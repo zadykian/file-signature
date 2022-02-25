@@ -8,11 +8,11 @@ using TypeDecorators.Lib.Extensions;
 namespace FileSignature.Test;
 
 /// <summary>
-/// Tests of <see cref="BoundedConcurrentQueue{T}"/> component.
+/// Tests of <see cref="BoundedBlockingQueue{T}"/> component.
 /// </summary>
-public class ConcurrentQueueTests : TestBase
+public class BoundedBlockingQueueTests : TestBase
 {
-	private static IQueue<T> Queue<T>() where T : notnull => new BoundedConcurrentQueue<T>(64u);
+	private static IQueue<T> Queue<T>() where T : notnull => new BoundedBlockingQueue<T>(64u);
 
 	/// <summary>
 	/// Attempt to push new item to queue after its' completion leads

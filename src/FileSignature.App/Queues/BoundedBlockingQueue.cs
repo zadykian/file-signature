@@ -8,8 +8,7 @@ namespace FileSignature.App.Queues;
 /// <typeparam name="T">
 /// Type of elements.
 /// </typeparam>
-internal class BoundedConcurrentQueue<T> : IQueue<T>
-	where T : notnull
+internal class BoundedBlockingQueue<T> : IQueue<T>
 {
 	private readonly object enqueueLock = new();
 	private readonly object dequeueLock = new();
@@ -22,7 +21,7 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 
 	private bool isCompleted;
 
-	public BoundedConcurrentQueue(uint maxSize)
+	public BoundedBlockingQueue(uint maxSize)
 	{
 		this.maxSize = (int)maxSize;
 		head = new Node();
@@ -38,7 +37,7 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 
 		lock (enqueueLock)
 		{
-			while (Volatile.Read(ref currentSize) == maxSize)
+			while (currentSize == maxSize)
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				Monitor.Wait(enqueueLock);
@@ -63,7 +62,7 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 	}
 
 	/// <inheritdoc />
-	void IQueueBase<T>.Complete()
+	void ICompletableCollection.Complete()
 	{
 		ThrowIfCompleted();
 		isCompleted = true;
@@ -78,19 +77,11 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 	}
 
 	/// <inheritdoc />
-	IEnumerable<T> IQueueBase<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
+	IEnumerable<T> IQueue<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
 	{
-		while (true)
+		while (TryPull(cancellationToken, out var pulledValue))
 		{
-			if (TryPull(cancellationToken, out var pulledValue))
-			{
-				yield return pulledValue;
-			}
-			else
-			{
-				// Means that queue was completed, so IEnumerable is terminating.
-				yield break;
-			}
+			yield return pulledValue;
 		}
 	}
 
@@ -118,7 +109,7 @@ internal class BoundedConcurrentQueue<T> : IQueue<T>
 		{
 			while (head.Next == null)
 			{
-				if (Volatile.Read(ref isCompleted))
+				if (isCompleted)
 				{
 					pulledValue = default;
 					return false;

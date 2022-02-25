@@ -23,11 +23,17 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	/// </summary>
 	private readonly CountdownEvent completeBlockHashQueueEvent = new(hashWorkersCount);
 
-	private readonly IQueue<IndexedSegment> fileBlockQueue
-		= new BoundedConcurrentQueue<IndexedSegment>(maxQueuesSize);
+	/// <summary>
+	/// Input file blocks queue which is consumed in parallel by hash calculation workers.
+	/// </summary>
+	private readonly IQueue<IndexedSegment> fileBlockInputQueue
+		= new BoundedBlockingQueue<IndexedSegment>(maxQueuesSize);
 
-	private readonly IPriorityQueue<IndexedSegment> blockHashQueue
-		= new BoundedConcurrentPriorityQueue<IndexedSegment>(maxQueuesSize);
+	/// <summary>
+	/// Output hash codes queue in which workers push results in parallel.
+	/// </summary>
+	private readonly IPriorityQueue<IndexedSegment> blockHashOutputQueue
+		= new BoundedBlockingPriorityQueue<IndexedSegment>(maxQueuesSize);
 
 	private readonly IInputReader inputReader;
 	private readonly IWorkScheduler workScheduler;
@@ -45,14 +51,17 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 
-		// Consume file content as sequence of blocks and push each block to fileBlockQueue.
+		// Consume file content as sequence of blocks and push each block to fileBlockInputQueue.
 		RunFileConsumptionProcess(genParameters, cancellationToken);
 
-		// Consume data from fileBlockQueue, calculate hash codes and push values to blockHashQueue.
+		// Consume data from fileBlockInputQueue, calculate hash codes and push values to blockHashOutputQueue.
 		RunHashCalculationProcess(cancellationToken);
 
-		// Consume hash values from blockHashQueue in foreground.
-		return blockHashQueue.ConsumeAsEnumerable(cancellationToken);
+		// Consume hash values from blockHashOutputQueue in foreground.
+
+		return Enumerable
+			.Range(0, int.MaxValue)
+			.Select(blockIndex => blockHashOutputQueue.Pull((uint) blockIndex, cancellationToken));
 	}
 
 	/// <summary>
@@ -69,9 +78,9 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 		{
 			inputReader
 				.Read(genParameters, cancellationToken)
-				.ForEach(item => fileBlockQueue.Push(item, cancellationToken));
+				.ForEach(item => fileBlockInputQueue.Push(item, cancellationToken));
 
-			fileBlockQueue.Complete();
+			fileBlockInputQueue.Complete();
 		});
 
 	/// <summary>
@@ -82,24 +91,26 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	/// </param>
 	private void RunHashCalculationProcess(CancellationToken cancellationToken)
 	{
-		// Consume data from fileBlockQueue, calculate hash codes in parallel and push results to blockHashQueue.
+		// Consume data from fileBlockInputQueue, calculate hash codes
+		// in parallel and push results to blockHashOutputQueue.
 
 		workScheduler.RunInBackground(
 			() => HashGenerationWorkItem(cancellationToken),
 			hashWorkersCount);
 
-		// Wait for calculation completion in background and then set blockHashQueue as completed.
+		// Wait for calculation completion in background and then set
+		// blockHashOutputQueue as completed.
 
 		workScheduler.RunInBackground(() =>
 		{
 			completeBlockHashQueueEvent.Wait(cancellationToken);
-			blockHashQueue.Complete();
+			blockHashOutputQueue.Complete();
 		});
 	}
 
 	/// <summary>
-	/// Calculate hash codes of file blocks from queue <see cref="fileBlockQueue"/>
-	/// and push results to <see cref="blockHashQueue"/>.
+	/// Calculate hash codes of file blocks from queue <see cref="fileBlockInputQueue"/>
+	/// and push results to <see cref="blockHashOutputQueue"/>.
 	/// </summary>
 	/// <param name="cancellationToken">
 	/// Token to cancel an operation.
@@ -109,14 +120,14 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 		cancellationToken.ThrowIfCancellationRequested();
 		using var sha256 = SHA256.Create();
 
-		foreach (var fileBlock in fileBlockQueue.ConsumeAsEnumerable(cancellationToken))
+		foreach (var fileBlock in fileBlockInputQueue.ConsumeAsEnumerable(cancellationToken))
 		{
 			try
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize * Memory.Byte);
 				sha256.TryComputeHash(fileBlock.Content, hashCodeBlock.Content, out _);
-				blockHashQueue.Push(hashCodeBlock, hashCodeBlock.Index, cancellationToken);
+				blockHashOutputQueue.Push(hashCodeBlock, hashCodeBlock.Index, cancellationToken);
 			}
 			finally
 			{
