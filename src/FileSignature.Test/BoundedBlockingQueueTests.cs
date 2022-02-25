@@ -12,7 +12,10 @@ namespace FileSignature.Test;
 /// </summary>
 public class BoundedBlockingQueueTests : TestBase
 {
-	private static IQueue<T> Queue<T>() where T : notnull => new BoundedBlockingQueue<T>(64u);
+	/// <summary>
+	/// Create new <see cref="IQueue{T}"/> instance.
+	/// </summary>
+	private static IQueue<T> Queue<T>() => new BoundedBlockingQueue<T>(64u);
 
 	/// <summary>
 	/// Attempt to push new item to queue after its' completion leads

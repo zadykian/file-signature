@@ -14,9 +14,9 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	private static readonly byte hashWorkersCount = (byte) Environment.ProcessorCount;
 
 	/// <summary>
-	/// Max size for queues input and output queues.
+	/// Max size of input queue.
 	/// </summary>
-	private static readonly ushort maxQueuesSize = (ushort) (4 * hashWorkersCount);
+	private static readonly ushort maxInputQueueSize = (ushort) (4 * hashWorkersCount);
 
 	/// <summary>
 	/// Event which represents completion of multithreading hash calculation process.
@@ -27,13 +27,13 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	/// Input file blocks queue which is consumed in parallel by hash calculation workers.
 	/// </summary>
 	private readonly IQueue<IndexedSegment> fileBlockInputQueue
-		= new BoundedBlockingQueue<IndexedSegment>(maxQueuesSize);
+		= new BoundedBlockingQueue<IndexedSegment>(maxInputQueueSize);
 
 	/// <summary>
 	/// Output hash codes queue in which workers push results in parallel.
 	/// </summary>
 	private readonly IPriorityQueue<IndexedSegment> blockHashOutputQueue
-		= new BoundedBlockingPriorityQueue<IndexedSegment>(maxQueuesSize);
+		= new BlockingPriorityQueue<IndexedSegment>();
 
 	private readonly IInputReader inputReader;
 	private readonly IWorkScheduler workScheduler;
@@ -58,10 +58,8 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 		RunHashCalculationProcess(cancellationToken);
 
 		// Consume hash values from blockHashOutputQueue in foreground.
-
-		return Enumerable
-			.Range(0, int.MaxValue)
-			.Select(blockIndex => blockHashOutputQueue.Pull((uint) blockIndex, cancellationToken));
+		var blockIndexRange = Enumerable.Range(0, int.MaxValue).Select(blockIndex => (uint)blockIndex);
+		return blockHashOutputQueue.PullAllByPriorities(blockIndexRange, cancellationToken);
 	}
 
 	/// <summary>
@@ -125,9 +123,9 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 			try
 			{
 				cancellationToken.ThrowIfCancellationRequested();
-				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize * Memory.Byte);
+				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize / 8 * Memory.Byte);
 				sha256.TryComputeHash(fileBlock.Content, hashCodeBlock.Content, out _);
-				blockHashOutputQueue.Push(hashCodeBlock, hashCodeBlock.Index, cancellationToken);
+				blockHashOutputQueue.Push(hashCodeBlock, hashCodeBlock.Index);
 			}
 			finally
 			{

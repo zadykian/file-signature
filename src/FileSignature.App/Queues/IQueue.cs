@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FileSignature.App.Queues;
 
 /// <summary>
@@ -36,16 +38,22 @@ internal interface IQueue<T> : ICompletableCollection
 internal interface IPriorityQueue<T> : ICompletableCollection
 {
 	/// <summary>
-	/// Add item into queue with <paramref name="priority"/>.
+	/// Add <paramref name="item"/> into queue with <paramref name="priority"/>.
 	/// </summary>
-	void Push(T item, uint priority, CancellationToken cancellationToken = default);
+	void Push(T item, uint priority);
 
 	/// <summary>
-	/// Add item into queue with <paramref name="priority"/>.
+	/// Pull sequence of values from queue by priorities.
 	/// </summary>
+	/// <param name="priorities">
+	/// Sequence of priorities associated with values of type <typeparamref name="T"/>.
+	/// </param>
+	/// <param name="cancellationToken">
+	/// Token to cancel an operation.
+	/// </param>
 	/// <remarks>
-	/// This method blocks current thread until either item with <paramref name="priority"/>
-	/// is pushed to queue or <see cref="ICompletableCollection.Complete"/> is called.
+	/// This method blocks current thread until either all items are found by priority
+	/// or current queue is completed by <see cref="ICompletableCollection.Complete"/> method.
 	/// </remarks>
-	T Pull(uint priority, CancellationToken cancellationToken = default);
+	IEnumerable<T> PullAllByPriorities(IEnumerable<uint> priorities, CancellationToken cancellationToken = default);
 }
