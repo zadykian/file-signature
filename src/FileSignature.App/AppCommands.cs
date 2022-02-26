@@ -118,6 +118,9 @@ internal class HandleValidationExceptionFilter : ConsoleAppFilter
 		{
 			await next(context);
 		}
+		catch (Exception e) when (e.TryUnwrap<OperationCanceledException>(out _))
+		{
+		}
 		catch (Exception e) when (e.TryUnwrap<ValidationException>(out var exception))
 		{
 			context.Logger.LogError($"Some parameter values are invalid:{Environment.NewLine}{exception.Message}");

@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using FileSignature.App.Collections.Interfaces;
 
+// ReSharper disable InconsistentNaming
+
 namespace FileSignature.App.Collections;
 
 /// <summary>
@@ -15,22 +17,31 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	private readonly object dequeueLock = new();
 
 	private readonly int maxSize;
+	private readonly CancellationToken cancellationToken;
 
 	private int currentSize;
 	private Node head;
 	private Node tail;
 
-	private bool isCompleted;
+	// We use integer as logical value here for Interlocked operations support.
+	private int completionState;
+	private const int NotCompleted = 0;
+	private const int Completed = 1;
 
-	public BoundedBlockingQueue(uint maxSize)
+	public BoundedBlockingQueue(uint maxSize, CancellationToken cancellationToken = default)
 	{
 		this.maxSize = (int)maxSize;
 		head = new Node();
 		tail = head;
+
+		// In case of cancellation we must complete current queue
+		// to unlock writers or/and readers locked by Monitor.Wait.
+		cancellationToken.Register(Complete);
+		this.cancellationToken = cancellationToken;
 	}
 
 	/// <inheritdoc />
-	void IQueue<T>.Push(T item, CancellationToken cancellationToken)
+	void IQueue<T>.Push(T item)
 	{
 		ThrowIfCompleted();
 		var queueWasEmpty = false;
@@ -63,13 +74,20 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	}
 
 	/// <inheritdoc />
-	void ICompletableCollection.Complete()
+	public void Complete()
 	{
-		ThrowIfCompleted();
-		isCompleted = true;
+		if (Interlocked.Exchange(ref completionState, Completed) != NotCompleted)
+		{
+			return;
+		}
 
-		// At this moment some readers may already be blocked by Monitor.Wait,
-		// so we are notifying them to complete TryPull operation.
+		// At this moment some writers or/and readers may already be blocked by Monitor.Wait,
+		// so we are notifying them to either cancel or complete their operations.
+
+		lock (enqueueLock)
+		{
+			Monitor.PulseAll(enqueueLock);
+		}
 
 		lock (dequeueLock)
 		{
@@ -78,9 +96,9 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	}
 
 	/// <inheritdoc />
-	IEnumerable<T> IQueue<T>.ConsumeAsEnumerable(CancellationToken cancellationToken)
+	IEnumerable<T> IQueue<T>.ConsumeAsEnumerable()
 	{
-		while (TryPull(cancellationToken, out var pulledValue))
+		while (TryPull(out var pulledValue))
 		{
 			yield return pulledValue;
 		}
@@ -89,9 +107,6 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	/// <summary>
 	/// Try pull value from queue.
 	/// </summary>
-	/// <param name="cancellationToken">
-	/// Token to cancel an operation.
-	/// </param>
 	/// <param name="pulledValue">
 	/// Value pulled from queue.
 	/// </param>
@@ -103,7 +118,7 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	/// or if queue is reached its' capacity limit.
 	/// Method returns <c>false</c> only if current queue was completed concurrently by other thread.
 	/// </remarks>
-	private bool TryPull(CancellationToken cancellationToken, [NotNullWhen(returnValue: true)] out T? pulledValue)
+	private bool TryPull([NotNullWhen(returnValue: true)] out T? pulledValue)
 	{
 		var queueWasFull = false;
 
@@ -111,13 +126,14 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 		{
 			while (head.Next == null)
 			{
-				if (isCompleted)
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if (completionState == Completed)
 				{
 					pulledValue = default;
 					return false;
 				}
 
-				cancellationToken.ThrowIfCancellationRequested();
 				Monitor.Wait(dequeueLock);
 			}
 
@@ -146,7 +162,7 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	/// </summary>
 	private void ThrowIfCompleted()
 	{
-		if (!isCompleted)
+		if (completionState != Completed)
 		{
 			return;
 		}

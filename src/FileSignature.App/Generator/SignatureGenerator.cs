@@ -4,6 +4,8 @@ using FileSignature.App.Collections.Interfaces;
 using FileSignature.App.Reader;
 using FileSignature.App.Scheduler;
 
+// ReSharper disable ArgumentsStyleStringLiteral
+
 namespace FileSignature.App.Generator;
 
 /// <inheritdoc cref="ISignatureGenerator" />
@@ -25,15 +27,15 @@ internal class SignatureGenerator : ISignatureGenerator
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 
-		var context = new CalculationContext(genParameters);
+		var context = new CalculationContext(genParameters, cancellationToken);
 
 		// Consume file content as sequence of blocks
 		// and push each block to CalculationContext.FileBlockInputQueue.
 		RunFileConsumptionProcess(context, cancellationToken);
 
-		// Consume data from CalculationContext.FileBlockInputQueue, calculate
+		// Consume data from CalculationContext.FileBlockInputQueue, generate
 		// hash codes and push values to CalculationContext.BlockHashOutputMap.
-		RunHashCalculationProcess(context, cancellationToken);
+		RunHashGenerationProcess(context, cancellationToken);
 
 		// Consume hash values from CalculationContext.BlockHashOutputMap
 		// in foreground.
@@ -55,13 +57,13 @@ internal class SignatureGenerator : ISignatureGenerator
 		{
 			inputReader
 				.Read(context.GenParameters, cancellationToken)
-				.ForEach(item => context.FileBlockInputQueue.Push(item, cancellationToken));
+				.ForEach(context.FileBlockInputQueue.Push);
 
 			context.FileBlockInputQueue.Complete();
-		});
+		}, workerName: "File reader");
 
 	/// <summary>
-	/// Run hash calculation process in background.
+	/// Run hash generation process in background.
 	/// </summary>
 	/// <param name="context">
 	/// Hash codes generation context.
@@ -69,14 +71,15 @@ internal class SignatureGenerator : ISignatureGenerator
 	/// <param name="cancellationToken">
 	/// Token to cancel an operation.
 	/// </param>
-	private void RunHashCalculationProcess(CalculationContext context, CancellationToken cancellationToken)
+	private void RunHashGenerationProcess(CalculationContext context, CancellationToken cancellationToken)
 	{
 		// Consume data from CalculationContext.FileBlockInputQueue, calculate hash codes
 		// in parallel and push results to CalculationContext.BlockHashOutputMap.
 
 		workScheduler.RunInBackground(
 			() => HashGenerationWorkItem(context, cancellationToken),
-			context.GenParameters.HashWorkersCount);
+			workerName: "Hash generator",
+			degreeOfParallelism: context.GenParameters.HashWorkersCount);
 
 		// Wait for calculation completion in background and then set
 		// blockHashOutputMap as completed.
@@ -85,7 +88,7 @@ internal class SignatureGenerator : ISignatureGenerator
 		{
 			context.CompleteBlockHashQueueEvent.Wait(cancellationToken);
 			context.BlockHashOutputMap.Complete();
-		});
+		}, workerName: "Hash completion waiter");
 	}
 
 	/// <summary>
@@ -103,7 +106,7 @@ internal class SignatureGenerator : ISignatureGenerator
 		cancellationToken.ThrowIfCancellationRequested();
 		using var sha256 = SHA256.Create();
 
-		foreach (var fileBlock in context.FileBlockInputQueue.ConsumeAsEnumerable(cancellationToken))
+		foreach (var fileBlock in context.FileBlockInputQueue.ConsumeAsEnumerable())
 		{
 			try
 			{
@@ -126,13 +129,13 @@ internal class SignatureGenerator : ISignatureGenerator
 	/// </summary>
 	private readonly struct CalculationContext
 	{
-		public CalculationContext(GenParameters genParameters)
+		public CalculationContext(GenParameters genParameters, CancellationToken cancellationToken)
 		{
 			GenParameters = genParameters;
 
 			// 1GB - limit for intermediate queue.
 			var fileQueueSize = (uint)(Memory.Gigabyte / genParameters.BlockSize);
-			FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize);
+			FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize, cancellationToken);
 
 			// Set initial size for output map based on number of workers.
 			var outputMapInitialSize = 8u * genParameters.HashWorkersCount;

@@ -1,3 +1,19 @@
 ## FileSignature
+Console application to generate file signature.
+It's being published as a single-file trimmed executable.
 
-### work in progress
+#### dotnet-cli publish command:
+```
+dotnet publish FileSignature.App --configuration release --runtime [win-x64|linux-x64|osx-x64] --self-contained
+```
+
+### Usage
+Signature app has a convenient command-line interface. To display information, execute `--help` command.
+![example](./docs/cli-example.png)
+
+`generate` command produces list of hash codes - one for each segment of specified file.
+
+#### LogLevel can be changed via environment variable:
+```
+export Logging__LogLevel__Default=[Trace|Information|Error|...]
+```

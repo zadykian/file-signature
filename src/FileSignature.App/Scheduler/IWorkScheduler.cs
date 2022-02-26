@@ -12,8 +12,11 @@ internal interface IWorkScheduler
 	/// Work item delegate.
 	/// Runs in parallel depending on <paramref name="degreeOfParallelism"/>.
 	/// </param>
+	/// <param name="workerName">
+	/// Worker's name.
+	/// </param>
 	/// <param name="degreeOfParallelism">
 	/// Degree of parallelism.
 	/// </param>
-	void RunInBackground(Action workItem, byte degreeOfParallelism = 1);
+	void RunInBackground(Action workItem, string workerName, byte degreeOfParallelism = 1);
 }

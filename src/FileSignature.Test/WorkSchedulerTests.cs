@@ -26,7 +26,7 @@ public class WorkSchedulerTests : TestBase
 			Thread.Sleep(10);
 			Interlocked.Increment(ref counter);
 			if (counter == workersCount) completionSource.SetResult();
-		}, degreeOfParallelism: workersCount);
+		}, "test worker", degreeOfParallelism: workersCount);
 
 		await completionSource.Task;
 		Assert.Pass();
@@ -46,7 +46,7 @@ public class WorkSchedulerTests : TestBase
 		{
 			Thread.Sleep(10);
 			throw new ApplicationException("unhandled exception in background worker!");
-		});
+		}, "test worker");
 
 		SpinWait.SpinUntil(() => lifetimeManager.TokenSource.IsCancellationRequested);
 		Assert.Pass();
