@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using FileSignature.App.Collections.Interfaces;
 
-namespace FileSignature.App.Queues;
+namespace FileSignature.App.Collections;
 
 /// <summary>
 /// Blocking concurrent queue with limited capacity.
@@ -68,7 +69,7 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 		isCompleted = true;
 
 		// At this moment some readers may already be blocked by Monitor.Wait,
-		// so we are notifying them to complete ConsumeAsEnumerable operation.
+		// so we are notifying them to complete TryPull operation.
 
 		lock (dequeueLock)
 		{

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
-using FileSignature.App.Queues;
+using FileSignature.App.Collections;
+using FileSignature.App.Collections.Interfaces;
 using NUnit.Framework;
 using TypeDecorators.Lib.Extensions;
 

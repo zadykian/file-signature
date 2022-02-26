@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
-using FileSignature.App.Queues;
+using FileSignature.App.Collections;
+using FileSignature.App.Collections.Interfaces;
 using FileSignature.App.Reader;
 using FileSignature.App.Scheduler;
 
@@ -14,9 +15,9 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	private static readonly byte hashWorkersCount = (byte) Environment.ProcessorCount;
 
 	/// <summary>
-	/// Max size of input queue.
+	/// Size of intermediate buffers to store produced values.
 	/// </summary>
-	private static readonly ushort maxInputQueueSize = (ushort) (4 * hashWorkersCount);
+	private static readonly ushort buffersSize = (ushort) (4 * hashWorkersCount);
 
 	/// <summary>
 	/// Event which represents completion of multithreading hash calculation process.
@@ -27,13 +28,13 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	/// Input file blocks queue which is consumed in parallel by hash calculation workers.
 	/// </summary>
 	private readonly IQueue<IndexedSegment> fileBlockInputQueue
-		= new BoundedBlockingQueue<IndexedSegment>(maxInputQueueSize);
+		= new BoundedBlockingQueue<IndexedSegment>(buffersSize);
 
 	/// <summary>
-	/// Output hash codes queue in which workers push results in parallel.
+	/// Output hash codes map in which workers add results in parallel.
 	/// </summary>
-	private readonly IPriorityQueue<IndexedSegment> blockHashOutputQueue
-		= new BlockingPriorityQueue<IndexedSegment>();
+	private readonly IBlockingMap<uint, IndexedSegment> blockHashOutputMap
+		= new BlockingMap<uint, IndexedSegment>(buffersSize);
 
 	private readonly IInputReader inputReader;
 	private readonly IWorkScheduler workScheduler;
@@ -54,12 +55,12 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 		// Consume file content as sequence of blocks and push each block to fileBlockInputQueue.
 		RunFileConsumptionProcess(genParameters, cancellationToken);
 
-		// Consume data from fileBlockInputQueue, calculate hash codes and push values to blockHashOutputQueue.
+		// Consume data from fileBlockInputQueue, calculate hash codes and push values to blockHashOutputMap.
 		RunHashCalculationProcess(cancellationToken);
 
-		// Consume hash values from blockHashOutputQueue in foreground.
+		// Consume hash values from blockHashOutputMap in foreground.
 		var blockIndexRange = Enumerable.Range(0, int.MaxValue).Select(blockIndex => (uint)blockIndex);
-		return blockHashOutputQueue.PullAllByPriorities(blockIndexRange, cancellationToken);
+		return blockHashOutputMap.GetAndRemoveAllByKeys(blockIndexRange, cancellationToken);
 	}
 
 	/// <summary>
@@ -90,25 +91,25 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 	private void RunHashCalculationProcess(CancellationToken cancellationToken)
 	{
 		// Consume data from fileBlockInputQueue, calculate hash codes
-		// in parallel and push results to blockHashOutputQueue.
+		// in parallel and push results to blockHashOutputMap.
 
 		workScheduler.RunInBackground(
 			() => HashGenerationWorkItem(cancellationToken),
 			hashWorkersCount);
 
 		// Wait for calculation completion in background and then set
-		// blockHashOutputQueue as completed.
+		// blockHashOutputMap as completed.
 
 		workScheduler.RunInBackground(() =>
 		{
 			completeBlockHashQueueEvent.Wait(cancellationToken);
-			blockHashOutputQueue.Complete();
+			blockHashOutputMap.Complete();
 		});
 	}
 
 	/// <summary>
 	/// Calculate hash codes of file blocks from queue <see cref="fileBlockInputQueue"/>
-	/// and push results to <see cref="blockHashOutputQueue"/>.
+	/// and push results to <see cref="blockHashOutputMap"/>.
 	/// </summary>
 	/// <param name="cancellationToken">
 	/// Token to cancel an operation.
@@ -125,7 +126,7 @@ internal class SignatureGenerator : ISignatureGenerator, IDisposable
 				cancellationToken.ThrowIfCancellationRequested();
 				var hashCodeBlock = new IndexedSegment(fileBlock.Index, sha256.HashSize / 8 * Memory.Byte);
 				sha256.TryComputeHash(fileBlock.Content, hashCodeBlock.Content, out _);
-				blockHashOutputQueue.Push(hashCodeBlock, hashCodeBlock.Index);
+				blockHashOutputMap.Add(hashCodeBlock.Index, hashCodeBlock);
 			}
 			finally
 			{
