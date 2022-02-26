@@ -15,7 +15,7 @@ public class WorkSchedulerTests : TestBase
 	[Timeout(1000)]
 	public async Task EnqueuedDelegatesRunsSuccessfully()
 	{
-		IWorkScheduler workScheduler = new ThreadWorkScheduler(new TokenManager(), Logger<ThreadWorkScheduler>());
+		IWorkScheduler workScheduler = new ThreadWorkScheduler(new TokenLifetimeManager(), Logger<ThreadWorkScheduler>());
 		const int workersCount = 4;
 
 		var completionSource = new TaskCompletionSource();
@@ -39,7 +39,7 @@ public class WorkSchedulerTests : TestBase
 	[Timeout(1000)]
 	public void ExceptionInWorkerLeadsToCancellation()
 	{
-		var lifetimeManager = new TokenManager();
+		var lifetimeManager = new TokenLifetimeManager();
 		IWorkScheduler workScheduler = new ThreadWorkScheduler(lifetimeManager, Logger<ThreadWorkScheduler>());
 
 		workScheduler.RunInBackground(() =>
@@ -50,14 +50,5 @@ public class WorkSchedulerTests : TestBase
 
 		SpinWait.SpinUntil(() => lifetimeManager.TokenSource.IsCancellationRequested);
 		Assert.Pass();
-	}
-
-	/// <inheritdoc />
-	private class TokenManager : ILifetimeManager
-	{
-		public CancellationTokenSource TokenSource { get; } = new();
-
-		/// <inheritdoc />
-		void ILifetimeManager.RequestAppCancellation() => TokenSource.Cancel();
 	}
 }
