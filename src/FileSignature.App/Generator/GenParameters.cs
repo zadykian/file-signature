@@ -9,4 +9,7 @@ namespace FileSignature.App.Generator;
 /// <param name="BlockSize">
 /// Size of single block to generate hash code of.
 /// </param>
-internal readonly record struct GenParameters(string FilePath, Memory BlockSize);
+/// <param name="HashWorkersCount">
+/// Number of workers to perform hashcode calculations.
+/// </param>
+internal readonly record struct GenParameters(string FilePath, Memory BlockSize, byte HashWorkersCount);

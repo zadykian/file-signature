@@ -82,7 +82,7 @@ internal class InputReader : IInputReader
 	/// </exception>
 	private Stream CreateInputStream(GenParameters genParameters)
 	{
-		var (filePath, blockSize) = genParameters;
+		var (filePath, blockSize, _) = genParameters;
 
 		if (!File.Exists(filePath))
 		{

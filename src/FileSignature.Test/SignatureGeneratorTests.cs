@@ -35,7 +35,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 		var testInput = Enumerable.Empty<IndexedSegment>();
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(default);
+		var hashCodes = generator.Generate(new GenParameters("", default, 8));
 		Assert.IsEmpty(hashCodes);
 	}
 
@@ -62,7 +62,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(default).ToArray();
+		var hashCodes = generator.Generate(new GenParameters("", default, 8)).ToArray();
 
 		Assert.IsTrue(
 			hashCodes.Select(segment => segment.Index).IsOrdered(),

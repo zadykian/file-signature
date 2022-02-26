@@ -18,7 +18,11 @@ internal static class Program
 	/// </summary>
 	private static void Main(string[] args)
 		=> ConsoleApp
-			.CreateBuilder(args, options => options.GlobalFilters = new[] { ElapsedTimeFilter.Instance })
+			.CreateBuilder(args, options => options.GlobalFilters = new ConsoleAppFilter[]
+			{
+				new HandleValidationExceptionFilter { Order = 0 },
+				new MeasureElapsedTimeFilter        { Order = 1 }
+			})
 			.ConfigureServices(RegisterServices)
 			.Build()
 			.AddCommands<AppCommands>()

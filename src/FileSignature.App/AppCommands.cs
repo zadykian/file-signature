@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using FileSignature.App.Generator;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,11 @@ namespace FileSignature.App;
 /// </summary>
 internal class AppCommands : ConsoleAppBase
 {
+	/// <summary>
+	/// Default number of workers to perform hashcode calculations.
+	/// </summary>
+	private static readonly byte defaultWorkersCount = (byte) Environment.ProcessorCount;
+
 	private readonly ISignatureGenerator signatureGenerator;
 	private readonly ILogger<AppCommands> logger;
 
@@ -27,10 +33,14 @@ internal class AppCommands : ConsoleAppBase
 	/// </summary>
 	[Command(commandName: "generate", description: "Generate signature of file using specified block size.")]
 	public void GenerateSignature(
-		[Option(shortName: "f", description: "Path to file.")]                       string filePath,
-		[Option(shortName: "b", description: "Size of single block [4kB .. 64MB].")] string blockSize = "1MB")
+		[Option(shortName: "f", "Path to file.")]
+		string filePath,
+		[Option(shortName: "b", "Size of single block [4kB .. 64MB].")]
+		string blockSize = "1MB",
+		[Option(shortName: "w", "Number of hash workers [1 .. 16].", DefaultValue = "Number of processors")]
+		string? workersCount = null)
 		=> signatureGenerator
-			.Generate(ParseInput(filePath, blockSize), Context.CancellationToken)
+			.Generate(ParseInput(filePath, blockSize, workersCount), Context.CancellationToken)
 			.ForEach(block =>
 			{
 				logger.LogInformation(block.ToString());
@@ -46,58 +56,71 @@ internal class AppCommands : ConsoleAppBase
 	/// <param name="blockSize">
 	/// Size of single block to generate hash code of.
 	/// </param>
+	/// <param name="workersCount">
+	/// Number of workers to perform hashcode calculations.
+	/// </param>
 	/// <returns>
 	/// Input data for file signature generation algorithm.
 	/// </returns>
-	/// <exception cref="ArgumentException">
-	/// Either <paramref name="filePath"/> or <paramref name="blockSize"/> has invalid format or value.
+	/// <exception cref="ValidationException">
+	/// One of arguments has invalid value.
 	/// </exception>
-	private static GenParameters ParseInput(string filePath, string blockSize)
+	private static GenParameters ParseInput(string filePath, string blockSize, string? workersCount)
 	{
-		if (string.IsNullOrWhiteSpace(filePath))
+		var validators = new (Func<bool> Validator, string ErrorMessage)[]
 		{
-			throw new ArgumentException("File path value cannot be empty.", nameof(filePath));
-		}
+			(() => !string.IsNullOrWhiteSpace(filePath),
+				"File path value cannot be empty."),
+			(() => Memory.TryParse(blockSize, out _),
+				"Block size is not a valid memory value."),
+			(() => Memory.TryParse(blockSize, out var b) && b.Value.Between(4 * Memory.Kilobyte, 64 * Memory.Megabyte),
+				"Block size value must belong to range [4kB .. 64MB]."),
+			(() => workersCount is null || int.TryParse(workersCount, out _),
+				"Workers count value must be a positive integer."),
+			(() => workersCount is null || int.TryParse(workersCount, out var w) && w.Between(1, 16),
+				"Workers count value must belong to range [1 .. 16].")
+		};
 
-		if (!Memory.TryParse(blockSize, out var memory))
-		{
-			throw new ArgumentException($"Value '{blockSize}' is not a valid memory volume.", nameof(blockSize));
-		}
+		var combinedMessage = validators
+			.Where(tuple => !tuple.Validator())
+			.Select(tuple => tuple.ErrorMessage)
+			.JoinBy(Environment.NewLine);
 
-		if (!memory.Value.InRangeBetween(4 * Memory.Kilobyte, 64 * Memory.Megabyte))
-		{
-			throw new ArgumentException("Block size value must belong to range [4kB .. 64MB].");
-		}
-
-		return new GenParameters(filePath, memory.Value);
+		return string.IsNullOrWhiteSpace(combinedMessage)
+			? new GenParameters(filePath, Memory.Parse(blockSize), workersCount?.To(byte.Parse) ?? defaultWorkersCount)
+			: throw new ValidationException(combinedMessage);
 	}
 }
 
 /// <summary>
 /// Command filter which measures elapsed time.
 /// </summary>
-internal class ElapsedTimeFilter : ConsoleAppFilter
+internal class MeasureElapsedTimeFilter : ConsoleAppFilter
 {
-	private ElapsedTimeFilter()
-	{
-	}
-
-	/// <summary>
-	/// Instance of <see cref="ElapsedTimeFilter"/>.
-	/// </summary>
-	public static ConsoleAppFilter Instance { get; } = new ElapsedTimeFilter();
-
 	/// <inheritdoc />
 	public override async ValueTask Invoke(ConsoleAppContext context, Func<ConsoleAppContext, ValueTask> next)
 	{
 		var stopwatch = Stopwatch.StartNew();
+		await next(context);
+		context.Logger.LogInformation(@"Elapsed time: {Elapsed:hh\:mm\:ss\.fff}", stopwatch.Elapsed);
+	}
+}
+
+/// <summary>
+/// Command filter which handles <see cref="ValidationException"/> and logs validation error messages.
+/// </summary>
+internal class HandleValidationExceptionFilter : ConsoleAppFilter
+{
+	/// <inheritdoc />
+	public override async ValueTask Invoke(ConsoleAppContext context, Func<ConsoleAppContext, ValueTask> next)
+	{
 		try
 		{
 			await next(context);
 		}
-		finally
+		catch (Exception e) when (e.TryUnwrap<ValidationException>(out var exception))
 		{
-			context.Logger.LogInformation(@"Elapsed time: {Elapsed:hh\:mm\:ss\.fff}", stopwatch.Elapsed);
+			context.Logger.LogError($"Some parameter values are invalid:{Environment.NewLine}{exception.Message}");
 		}
 	}
 }

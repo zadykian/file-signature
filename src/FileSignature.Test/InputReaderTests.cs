@@ -69,7 +69,7 @@ public class InputReaderTests : TestBase
 	public void ThrowExceptionIfNotExists()
 	{
 		var reader = Reader();
-		var genParams = new GenParameters("non-existing-file.txt", Memory.Megabyte);
+		var genParams = new GenParameters("non-existing-file.txt", Memory.Megabyte, 4);
 
 		// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 		Assert.Throws<FileNotFoundException>(() => reader.Read(genParams).ToArray());
@@ -82,7 +82,7 @@ public class InputReaderTests : TestBase
 	public void ReadEmptyFile()
 	{
 		var reader = Reader();
-		var genParams = new GenParameters(pathBySize[Memory.Zero], Memory.Kilobyte);
+		var genParams = new GenParameters(pathBySize[Memory.Zero], Memory.Kilobyte, 4);
 
 		var result = reader.Read(genParams);
 		Assert.IsEmpty(result, "Resulting sequence is expected to be empty!");
@@ -97,7 +97,7 @@ public class InputReaderTests : TestBase
 		var reader = Reader();
 		var fileSize = 2 * Memory.Megabyte;
 
-		var genParams = new GenParameters(pathBySize[fileSize], 4 * Memory.Megabyte);
+		var genParams = new GenParameters(pathBySize[fileSize], 4 * Memory.Megabyte, 4);
 
 		var result = reader.Read(genParams).ToArray();
 
@@ -117,7 +117,7 @@ public class InputReaderTests : TestBase
 	public void ReadSeveralBlocks()
 	{
 		var reader = Reader();
-		var genParams = new GenParameters(pathBySize[16 * Memory.Megabyte], Memory.Megabyte);
+		var genParams = new GenParameters(pathBySize[16 * Memory.Megabyte], Memory.Megabyte, 4);
 
 		var result = reader.Read(genParams).ToArray();
 
