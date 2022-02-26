@@ -33,7 +33,7 @@ internal class AppCommands : ConsoleAppBase
 			.Generate(ParseInput(filePath, blockSize), Context.CancellationToken)
 			.ForEach(block =>
 			{
-				logger.LogTrace(block.ToString());
+				logger.LogInformation(block.ToString());
 				block.Dispose();
 			});
 

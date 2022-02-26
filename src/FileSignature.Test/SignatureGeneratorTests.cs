@@ -104,9 +104,9 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 				.ToArray();
 
 		return Enumerable
-			.Range(0, 128)
+			.Range(0, 32)
 			.Select(index => new IndexedSegment((uint)index, new ArraySegment<byte>(RandomOfSize(Memory.Megabyte))))
-			.Add(new IndexedSegment(128, RandomOfSize(256 * Memory.Kilobyte)))
+			.Add(new IndexedSegment(32, RandomOfSize(256 * Memory.Kilobyte)))
 			.ToArray();
 	}
 
