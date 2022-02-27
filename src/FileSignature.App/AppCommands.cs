@@ -35,7 +35,7 @@ internal class AppCommands : ConsoleAppBase
 	public void GenerateSignature(
 		[Option(shortName: "f", "Path to file.")]
 		string filePath,
-		[Option(shortName: "b", "Size of single block [4kB .. 64MB].")]
+		[Option(shortName: "b", "Size of single block [4KB .. 64MB].")]
 		string blockSize = "1MB",
 		[Option(shortName: "w", "Number of hash workers [1 .. 16].", DefaultValue = "Number of processors")]
 		string? workersCount = null)
@@ -74,7 +74,7 @@ internal class AppCommands : ConsoleAppBase
 			(() => Memory.TryParse(blockSize, out _),
 				"Block size is not a valid memory value."),
 			(() => Memory.TryParse(blockSize, out var b) && b.Value.Between(4 * Memory.Kilobyte, 64 * Memory.Megabyte),
-				"Block size value must belong to range [4kB .. 64MB]."),
+				"Block size value must belong to range [4KB .. 64MB]."),
 			(() => workersCount is null || int.TryParse(workersCount, out _),
 				"Workers count value must be a positive integer."),
 			(() => workersCount is null || int.TryParse(workersCount, out var w) && w.Between(1, 16),

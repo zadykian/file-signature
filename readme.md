@@ -11,7 +11,8 @@ dotnet publish src/FileSignature.App --configuration release --runtime [win-x64|
 Signature app has a convenient command-line interface. To display information about usage, execute `--help` command.
 ![example](./docs/cli-example.png)
 
-`generate` command produces list of SHA256 hash codes - one for each segment of specified file.
+Command `generate` produces list of SHA256 hash codes - one for each bloke (segment) of specified file.  
+Important note: here **1KB = 1024B**, **1MB = 1024KB**.
 
 #### LogLevel can be changed via environment variable:
 ```
