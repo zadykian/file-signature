@@ -133,8 +133,8 @@ internal class SignatureGenerator : ISignatureGenerator
 		{
 			GenParameters = genParameters;
 
-			// 1GB - limit for intermediate queue.
-			var fileQueueSize = (uint)(Memory.Gigabyte / genParameters.BlockSize);
+			// 256MB - limit for intermediate queue.
+			var fileQueueSize = (uint)(256 * Memory.Megabyte / genParameters.BlockSize);
 			FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize, cancellationToken);
 
 			// Set initial size for output map based on number of workers.
