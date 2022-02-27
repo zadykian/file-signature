@@ -19,6 +19,11 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 	private readonly SHA256 sha256 = SHA256.Create();
 
 	/// <summary>
+	/// Create new <see cref="GenParameters"/> instance.
+	/// </summary>
+	private static GenParameters Params() => new("test-file-name", Memory.Megabyte, 8);
+
+	/// <summary>
 	/// Create new <see cref="ISignatureGenerator"/> instance.
 	/// </summary>
 	private static ISignatureGenerator Generator(IInputReader inputReader)
@@ -35,7 +40,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 		var testInput = Enumerable.Empty<IndexedSegment>();
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(new GenParameters("", default, 8));
+		var hashCodes = generator.Generate(Params());
 		Assert.IsEmpty(hashCodes);
 	}
 
@@ -62,7 +67,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(new GenParameters("", default, 8)).ToArray();
+		var hashCodes = generator.Generate(Params()).ToArray();
 
 		Assert.IsTrue(
 			hashCodes.Select(segment => segment.Index).IsOrdered(),
@@ -100,7 +105,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 	{
 		static byte[] RandomOfSize(Memory length)
 			=> Enumerable
-				.Range(0, (int) length.TotalBytes).Select(_ => (byte)(random.Next() % 255))
+				.Range(0, (int)length.TotalBytes).Select(_ => (byte)(random.Next() % 255))
 				.ToArray();
 
 		return Enumerable
