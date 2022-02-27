@@ -4,7 +4,7 @@ It's being published as a single-file trimmed executable.
 
 #### dotnet-cli publish command (.NET 6+ SDK is required):
 ```
-dotnet publish FileSignature.App --configuration release --runtime [win-x64|linux-x64|osx-x64] --self-contained
+dotnet publish src/FileSignature.App --configuration release --runtime [win-x64|linux-x64|osx-x64] --self-contained --output publish
 ```
 
 ### Usage
