@@ -39,7 +39,7 @@ internal class InputReader : IInputReader
 			if (!ShouldContinue(genParameters, bytesReadCount, ref consumed))
 			{
 				fileBlock.Dispose();
-				logger.LogInformation("End of file is reached.");
+				logger.LogTrace("End of file is reached.");
 				yield break;
 			}
 
