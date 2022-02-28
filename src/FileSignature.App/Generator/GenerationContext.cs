@@ -16,7 +16,7 @@ internal readonly struct GenerationContext : IDisposable
 	/// <returns>
 	/// Max allowable number of elements in queue <see cref="FileBlockInputQueue"/>.
 	/// </returns>
-	private static uint CalculateInputQueueSize(Memory blockSize)
+	private static uint GetInputQueueSize(Memory blockSize)
 	{
 		const uint minSize = 4u;
 		var basedOnBlockSize = (uint)(32 * Memory.Megabyte / blockSize);
@@ -28,8 +28,8 @@ internal readonly struct GenerationContext : IDisposable
 		GenParameters = genParameters;
 		CancellationToken = cancellationToken;
 
-		// Calculate queue size limit based on single block size.
-		var fileQueueSize = CalculateInputQueueSize(genParameters.BlockSize);
+		// Get queue size limit based on single block size.
+		var fileQueueSize = GetInputQueueSize(genParameters.BlockSize);
 		FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize, cancellationToken);
 
 		// Set initial size for output map based on number of workers.

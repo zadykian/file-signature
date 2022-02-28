@@ -19,13 +19,8 @@ internal class AppCommands : ConsoleAppBase
 	private static readonly byte defaultWorkersCount = (byte) Environment.ProcessorCount;
 
 	private readonly ISignatureGenerator signatureGenerator;
-	private readonly ILogger<AppCommands> logger;
 
-	public AppCommands(ISignatureGenerator signatureGenerator, ILogger<AppCommands> logger)
-	{
-		this.signatureGenerator = signatureGenerator;
-		this.logger = logger;
-	}
+	public AppCommands(ISignatureGenerator signatureGenerator) => this.signatureGenerator = signatureGenerator;
 
 	/// <summary>
 	/// Generate signature of file <paramref name="filePath"/>
@@ -48,7 +43,7 @@ internal class AppCommands : ConsoleAppBase
 			.Generate(context)
 			.ForEach(block =>
 			{
-				logger.LogInformation(block.ToString());
+				Console.WriteLine(block);
 				block.Dispose();
 			});
 	}

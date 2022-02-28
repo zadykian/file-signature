@@ -55,7 +55,8 @@ internal class BlockingMap<TKey, TValue> : IBlockingMap<TKey, TValue>
 	/// </returns>
 	/// <remarks>
 	/// This method blocks current thread until either item with <paramref name="key"/>
-	/// is added to map or <see cref="ICompletableCollection.Complete"/> is called.
+	/// is added to map or <see cref="ICompletableCollection.Complete"/> is called
+	/// or cancellation is requested.
 	/// </remarks>
 	private bool TryGetAndRemove(
 		TKey key, [NotNullWhen(returnValue: true)] out TValue? value, CancellationToken cancellationToken)

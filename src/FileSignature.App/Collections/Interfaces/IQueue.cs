@@ -6,7 +6,7 @@ namespace FileSignature.App.Collections.Interfaces;
 internal interface IQueue<T> : ICompletableCollection
 {
 	/// <summary>
-	/// Add item into sink.
+	/// Add item to queue.
 	/// </summary>
 	void Push(T item);
 
