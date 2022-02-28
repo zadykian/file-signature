@@ -115,7 +115,7 @@ internal class BoundedBlockingQueue<T> : IQueue<T>
 	/// </returns>
 	/// <remarks>
 	/// This method blocks current thread if there is a contention between several reader threads
-	/// or if queue is reached its' capacity limit.
+	/// or if queue is empty.
 	/// Method returns <c>false</c> only if current queue was completed concurrently by other thread.
 	/// </remarks>
 	private bool TryPull([NotNullWhen(returnValue: true)] out T? pulledValue)

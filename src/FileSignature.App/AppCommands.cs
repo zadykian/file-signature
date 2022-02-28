@@ -54,7 +54,7 @@ internal class AppCommands : ConsoleAppBase
 	}
 
 	/// <summary>
-	/// Parse and validate CLI parameters (<paramref name="filePath"/>, <paramref name="blockSize"/>).
+	/// Parse and validate CLI parameters.
 	/// </summary>
 	/// <param name="filePath">
 	/// Path to file.

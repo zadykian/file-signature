@@ -70,7 +70,7 @@ internal class SignatureGenerator : ISignatureGenerator
 			degreeOfParallelism: context.GenParameters.HashWorkersCount);
 
 		// Wait for calculation completion in background and then set
-		// blockHashOutputMap as completed.
+		// GenerationContext.BlockHashOutputMap as completed.
 
 		workScheduler.RunInBackground(() =>
 		{
