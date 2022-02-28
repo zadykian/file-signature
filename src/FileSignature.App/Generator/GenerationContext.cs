@@ -1,3 +1,4 @@
+using System.Buffers;
 using FileSignature.App.Collections;
 using FileSignature.App.Collections.Interfaces;
 using FileSignature.App.Reader;
@@ -9,13 +10,26 @@ namespace FileSignature.App.Generator;
 /// </summary>
 internal readonly struct GenerationContext : IDisposable
 {
+	/// <summary>
+	/// Calculate queue size limit based on size of single block <paramref name="blockSize"/>.
+	/// </summary>
+	/// <returns>
+	/// Max allowable number of elements in queue <see cref="FileBlockInputQueue"/>.
+	/// </returns>
+	private static uint CalculateInputQueueSize(Memory blockSize)
+	{
+		const uint minSize = 4u;
+		var basedOnBlockSize = (uint)(32 * Memory.Megabyte / blockSize);
+		return Math.Max(minSize, basedOnBlockSize);
+	}
+
 	public GenerationContext(GenParameters genParameters, CancellationToken cancellationToken = default)
 	{
 		GenParameters = genParameters;
 		CancellationToken = cancellationToken;
 
-		// 256MB - limit for intermediate queue.
-		var fileQueueSize = (uint)(256 * Memory.Megabyte / genParameters.BlockSize);
+		// Calculate queue size limit based on single block size.
+		var fileQueueSize = CalculateInputQueueSize(genParameters.BlockSize);
 		FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize, cancellationToken);
 
 		// Set initial size for output map based on number of workers.

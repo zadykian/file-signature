@@ -5,7 +5,13 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<IsPackable>false</IsPackable>
-		<AssemblyVersion>1.0.0</AssemblyVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Version>1.1.0</Version>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
+		<FileVersion>$(Version)</FileVersion>
 	</PropertyGroup>
 
 	<!-- Build application as single trimmed executable on release mode. -->
