@@ -8,16 +8,13 @@ namespace FileSignature.App.Generator;
 internal interface ISignatureGenerator
 {
 	/// <summary>
-	/// Generate signature of file based on input <paramref name="genParameters"/>.
+	/// Generate signature of file based on input <see cref="GenerationContext.GenParameters"/>.
 	/// </summary>
-	/// <param name="genParameters">
-	/// Input parameters for file signature generation algorithm.
-	/// </param>
-	/// <param name="cancellationToken">
-	/// Token to cancel an operation.
+	/// <param name="context">
+	/// Hash codes generation context.
 	/// </param>
 	/// <returns>
 	/// Sequence of calculated hash-codes (one for each block).
 	/// </returns>
-	IEnumerable<IndexedSegment> Generate(GenParameters genParameters, CancellationToken cancellationToken = default);
+	IEnumerable<IndexedSegment> Generate(GenerationContext context);
 }

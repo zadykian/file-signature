@@ -21,7 +21,9 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 	/// <summary>
 	/// Create new <see cref="GenParameters"/> instance.
 	/// </summary>
-	private static GenParameters Params() => new("test-file-name", Memory.Megabyte, 8);
+	private static GenerationContext Context() => new(
+		new GenParameters("test-file-name", Memory.Megabyte, 8),
+		CancellationToken.None);
 
 	/// <summary>
 	/// Create new <see cref="ISignatureGenerator"/> instance.
@@ -40,7 +42,8 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 		var testInput = Enumerable.Empty<IndexedSegment>();
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(Params());
+		using var context = Context();
+		var hashCodes = generator.Generate(context);
 		Assert.IsEmpty(hashCodes);
 	}
 
@@ -67,7 +70,8 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 
 		var generator = Generator(new MemoryInputReader(testInput));
 
-		var hashCodes = generator.Generate(Params()).ToArray();
+		using var context = Context();
+		var hashCodes = generator.Generate(context).ToArray();
 
 		Assert.IsTrue(
 			hashCodes.Select(segment => segment.Index).IsOrdered(),

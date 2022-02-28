@@ -39,13 +39,19 @@ internal class AppCommands : ConsoleAppBase
 		string blockSize = "1MB",
 		[Option(shortName: "w", "Number of hash workers [1 .. 16].", DefaultValue = "Number of processors")]
 		string? workersCount = null)
-		=> signatureGenerator
-			.Generate(ParseInput(filePath, blockSize, workersCount), Context.CancellationToken)
+	{
+		using var context = new GenerationContext(
+			ParseInput(filePath, blockSize, workersCount),
+			Context.CancellationToken);
+
+		signatureGenerator
+			.Generate(context)
 			.ForEach(block =>
 			{
 				logger.LogInformation(block.ToString());
 				block.Dispose();
 			});
+	}
 
 	/// <summary>
 	/// Parse and validate CLI parameters (<paramref name="filePath"/>, <paramref name="blockSize"/>).
