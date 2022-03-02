@@ -9,20 +9,34 @@ namespace FileSignature.App.Generator;
 /// </summary>
 internal readonly struct GenerationContext : IDisposable
 {
+	/// <summary>
+	/// Calculate queue size limit based on size of single block <paramref name="blockSize"/>.
+	/// </summary>
+	/// <returns>
+	/// Max allowable number of elements in queue <see cref="FileBlockInputQueue"/>.
+	/// </returns>
+	private static uint GetInputQueueSize(Memory blockSize)
+	{
+		const uint minSize = 4u;
+		const uint maxSize = 64u;
+		var basedOnBlockSize = (uint)(32 * Memory.Megabyte / blockSize);
+		return basedOnBlockSize.Limit(minSize, maxSize);
+	}
+
 	public GenerationContext(GenParameters genParameters, CancellationToken cancellationToken = default)
 	{
 		GenParameters = genParameters;
 		CancellationToken = cancellationToken;
 
-		// 256MB - limit for intermediate queue.
-		var fileQueueSize = (uint)(256 * Memory.Megabyte / genParameters.BlockSize);
+		// Get queue size limit based on single block size.
+		var fileQueueSize = GetInputQueueSize(genParameters.BlockSize);
 		FileBlockInputQueue = new BoundedBlockingQueue<IndexedSegment>(fileQueueSize, cancellationToken);
 
 		// Set initial size for output map based on number of workers.
 		var outputMapInitialSize = 8u * genParameters.HashWorkersCount;
 		BlockHashOutputMap = new BlockingMap<uint, IndexedSegment>(outputMapInitialSize);
 
-		CompleteBlockHashQueueEvent = new CountdownEvent(genParameters.HashWorkersCount);
+		HashGenCompletionEvent = new CountdownEvent(genParameters.HashWorkersCount);
 	}
 
 	/// <summary>
@@ -50,10 +64,10 @@ internal readonly struct GenerationContext : IDisposable
 	public IBlockingMap<uint, IndexedSegment> BlockHashOutputMap { get; }
 
 	/// <summary>
-	/// Event which represents completion of multithreaded hash calculation process.
+	/// Event which represents completion of multithreaded hash codes generation process.
 	/// </summary>
-	public CountdownEvent CompleteBlockHashQueueEvent { get; }
+	public CountdownEvent HashGenCompletionEvent { get; }
 
 	/// <inheritdoc />
-	void IDisposable.Dispose() => CompleteBlockHashQueueEvent.Dispose();
+	void IDisposable.Dispose() => HashGenCompletionEvent.Dispose();
 }

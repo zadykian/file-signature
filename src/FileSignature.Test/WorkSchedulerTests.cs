@@ -15,7 +15,7 @@ public class WorkSchedulerTests : TestBase
 	[Timeout(1000)]
 	public async Task EnqueuedDelegatesRunsSuccessfully()
 	{
-		IWorkScheduler workScheduler = new ThreadWorkScheduler(new TokenLifetimeManager(), Logger<ThreadWorkScheduler>());
+		IWorkScheduler workScheduler = new ThreadWorkScheduler(new TokenAppLifetime(), Logger<ThreadWorkScheduler>());
 		const int workersCount = 4;
 
 		var completionSource = new TaskCompletionSource();
@@ -39,7 +39,7 @@ public class WorkSchedulerTests : TestBase
 	[Timeout(1000)]
 	public void ExceptionInWorkerLeadsToCancellation()
 	{
-		var lifetimeManager = new TokenLifetimeManager();
+		var lifetimeManager = new TokenAppLifetime();
 		IWorkScheduler workScheduler = new ThreadWorkScheduler(lifetimeManager, Logger<ThreadWorkScheduler>());
 
 		workScheduler.RunInBackground(() =>

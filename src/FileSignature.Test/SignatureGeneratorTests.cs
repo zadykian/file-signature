@@ -31,7 +31,7 @@ public class SignatureGeneratorTests : TestBase, IDisposable
 	private static ISignatureGenerator Generator(IInputReader inputReader)
 		=> new SignatureGenerator(
 			inputReader,
-			new ThreadWorkScheduler(new TokenLifetimeManager(), Logger<ThreadWorkScheduler>()));
+			new ThreadWorkScheduler(new TokenAppLifetime(), Logger<ThreadWorkScheduler>()));
 
 	/// <summary>
 	/// Attempt to generate signature of empty file leads to <see cref="InvalidOperationException"/>.

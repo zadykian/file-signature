@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace FileSignature.App.Scheduler;
@@ -5,12 +6,12 @@ namespace FileSignature.App.Scheduler;
 /// <inheritdoc />
 internal class ThreadWorkScheduler : IWorkScheduler
 {
-	private readonly ILifetimeManager lifetimeManager;
+	private readonly IHostApplicationLifetime applicationLifetime;
 	private readonly ILogger<ThreadWorkScheduler> logger;
 
-	public ThreadWorkScheduler(ILifetimeManager lifetimeManager, ILogger<ThreadWorkScheduler> logger)
+	public ThreadWorkScheduler(IHostApplicationLifetime applicationLifetime, ILogger<ThreadWorkScheduler> logger)
 	{
-		this.lifetimeManager = lifetimeManager;
+		this.applicationLifetime = applicationLifetime;
 		this.logger = logger;
 	}
 
@@ -63,7 +64,7 @@ internal class ThreadWorkScheduler : IWorkScheduler
 				// So, instead of unhandled exception, graceful shutdown is initiated by
 				// requesting cancellation via CancellationToken objects propagated to other workers.
 
-				lifetimeManager.RequestAppCancellation();
+				applicationLifetime.StopApplication();
 			}
 
 			logger.LogTrace("Worker '{workerName}' with ThreadId={threadId} is terminated.", workerName, threadId);

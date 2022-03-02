@@ -61,7 +61,7 @@ internal class SignatureGenerator : ISignatureGenerator
 	/// </param>
 	private void RunHashGenerationProcess(GenerationContext context)
 	{
-		// Consume data from GenerationContext.FileBlockInputQueue, calculate hash codes
+		// Consume data from GenerationContext.FileBlockInputQueue, generate hash codes
 		// in parallel and push results to GenerationContext.BlockHashOutputMap.
 
 		workScheduler.RunInBackground(
@@ -74,7 +74,7 @@ internal class SignatureGenerator : ISignatureGenerator
 
 		workScheduler.RunInBackground(() =>
 		{
-			context.CompleteBlockHashQueueEvent.Wait(context.CancellationToken);
+			context.HashGenCompletionEvent.Wait(context.CancellationToken);
 			context.BlockHashOutputMap.Complete();
 		}, workerName: "Hash completion waiter");
 	}
@@ -106,6 +106,6 @@ internal class SignatureGenerator : ISignatureGenerator
 			}
 		}
 
-		context.CompleteBlockHashQueueEvent.Signal();
+		context.HashGenCompletionEvent.Signal();
 	}
 }

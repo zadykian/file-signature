@@ -57,9 +57,6 @@ internal class InputReader : IInputReader
 	/// <returns>
 	/// <c>true</c> if there are more bytes to read, otherwise - <c>false</c>.
 	/// </returns>
-	/// <exception cref="InvalidOperationException">
-	/// Raised in case when file <see cref="GenParameters.FilePath"/> is empty.
-	/// </exception>
 	private bool ShouldContinue(GenParameters genParameters, int bytesReadCount, ref bool consumed)
 	{
 		if (bytesReadCount == 0 && !consumed)
@@ -78,7 +75,7 @@ internal class InputReader : IInputReader
 	/// Input parameters for file signature generation algorithm.
 	/// </param>
 	/// <exception cref="FileNotFoundException">
-	/// Raised in case when file <see cref="GenParameters.FilePath"/> does not exist.
+	/// Raised in case if file <see cref="GenParameters.FilePath"/> does not exist.
 	/// </exception>
 	private Stream CreateInputStream(GenParameters genParameters)
 	{
