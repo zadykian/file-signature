@@ -32,7 +32,7 @@ internal class AppCommands : ConsoleAppBase
 		string filePath,
 		[Option(shortName: "b", "Size of single block [4KB .. 64MB].")]
 		string blockSize = "1MB",
-		[Option(shortName: "w", "Number of hash workers [1 .. 16].", DefaultValue = "Number of processors")]
+		[Option(shortName: "w", "Number of hash workers [1 .. 32].", DefaultValue = "Number of processors")]
 		string? workersCount = null)
 	{
 		using var context = new GenerationContext(
@@ -72,14 +72,10 @@ internal class AppCommands : ConsoleAppBase
 		{
 			(() => !string.IsNullOrWhiteSpace(filePath),
 				"File path value cannot be empty."),
-			(() => Memory.TryParse(blockSize, out _),
-				"Block size is not a valid memory value."),
 			(() => Memory.TryParse(blockSize, out var b) && b.Value.Between(4 * Memory.Kilobyte, 64 * Memory.Megabyte),
-				"Block size value must belong to range [4KB .. 64MB]."),
-			(() => workersCount is null || int.TryParse(workersCount, out _),
-				"Workers count value must be a positive integer."),
-			(() => workersCount is null || int.TryParse(workersCount, out var w) && w.Between(1, 16),
-				"Workers count value must belong to range [1 .. 16].")
+				"Block size value must be a valid memory value belonging to range [4KB .. 64MB]."),
+			(() => workersCount is null || int.TryParse(workersCount, out var w) && w.Between(1, 32),
+				"Workers count value must be an integer belonging to range [1 .. 32].")
 		};
 
 		var combinedMessage = validators

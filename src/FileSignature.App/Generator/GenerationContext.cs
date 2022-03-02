@@ -1,4 +1,3 @@
-using System.Buffers;
 using FileSignature.App.Collections;
 using FileSignature.App.Collections.Interfaces;
 using FileSignature.App.Reader;
@@ -19,8 +18,9 @@ internal readonly struct GenerationContext : IDisposable
 	private static uint GetInputQueueSize(Memory blockSize)
 	{
 		const uint minSize = 4u;
+		const uint maxSize = 64u;
 		var basedOnBlockSize = (uint)(32 * Memory.Megabyte / blockSize);
-		return Math.Max(minSize, basedOnBlockSize);
+		return basedOnBlockSize.Limit(minSize, maxSize);
 	}
 
 	public GenerationContext(GenParameters genParameters, CancellationToken cancellationToken = default)
