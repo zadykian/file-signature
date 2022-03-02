@@ -16,7 +16,7 @@ internal class AppCommands : ConsoleAppBase
 	/// <summary>
 	/// Default number of workers to perform hashcode calculations.
 	/// </summary>
-	private static readonly byte defaultWorkersCount = (byte) Environment.ProcessorCount;
+	private static readonly byte defaultWorkersCount = (byte)Environment.ProcessorCount;
 
 	private readonly ISignatureGenerator signatureGenerator;
 
@@ -73,19 +73,13 @@ internal class AppCommands : ConsoleAppBase
 			(() => !string.IsNullOrWhiteSpace(filePath),
 				"File path value cannot be empty."),
 			(() => Memory.TryParse(blockSize, out var b) && b.Value.Between(4 * Memory.Kilobyte, 64 * Memory.Megabyte),
-				"Block size value must be a valid memory value belonging to range [4KB .. 64MB]."),
+				"Block size must be a valid memory value belonging to range [4KB .. 64MB]."),
 			(() => workersCount is null || int.TryParse(workersCount, out var w) && w.Between(1, 32),
-				"Workers count value must be an integer belonging to range [1 .. 32].")
+				"Workers count must be an integer value belonging to range [1 .. 32].")
 		};
 
-		var combinedMessage = validators
-			.Where(tuple => !tuple.Validator())
-			.Select(tuple => tuple.ErrorMessage)
-			.JoinBy(Environment.NewLine);
-
-		return string.IsNullOrWhiteSpace(combinedMessage)
-			? new GenParameters(filePath, Memory.Parse(blockSize), workersCount?.To(byte.Parse) ?? defaultWorkersCount)
-			: throw new ValidationException(combinedMessage);
+		validators.RunAll().ThrowIfInvalid();
+		return new(filePath, Memory.Parse(blockSize), workersCount?.To(byte.Parse) ?? defaultWorkersCount);
 	}
 }
 

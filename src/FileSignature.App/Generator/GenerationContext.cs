@@ -36,7 +36,7 @@ internal readonly struct GenerationContext : IDisposable
 		var outputMapInitialSize = 8u * genParameters.HashWorkersCount;
 		BlockHashOutputMap = new BlockingMap<uint, IndexedSegment>(outputMapInitialSize);
 
-		CompleteBlockHashQueueEvent = new CountdownEvent(genParameters.HashWorkersCount);
+		HashGenCompletionEvent = new CountdownEvent(genParameters.HashWorkersCount);
 	}
 
 	/// <summary>
@@ -64,10 +64,10 @@ internal readonly struct GenerationContext : IDisposable
 	public IBlockingMap<uint, IndexedSegment> BlockHashOutputMap { get; }
 
 	/// <summary>
-	/// Event which represents completion of multithreaded hash calculation process.
+	/// Event which represents completion of multithreaded hash codes generation process.
 	/// </summary>
-	public CountdownEvent CompleteBlockHashQueueEvent { get; }
+	public CountdownEvent HashGenCompletionEvent { get; }
 
 	/// <inheritdoc />
-	void IDisposable.Dispose() => CompleteBlockHashQueueEvent.Dispose();
+	void IDisposable.Dispose() => HashGenCompletionEvent.Dispose();
 }

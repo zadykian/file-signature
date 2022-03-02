@@ -7,7 +7,7 @@ internal interface IBlockingMap<in TKey, TValue> : ICompletableCollection
 	where TKey : IEquatable<TKey>
 {
 	/// <summary>
-	/// Add <paramref name="key"/> into queue with <paramref name="value"/>.
+	/// Add new key-value pair to map.
 	/// </summary>
 	void Add(TKey key, TValue value);
 
@@ -21,8 +21,10 @@ internal interface IBlockingMap<in TKey, TValue> : ICompletableCollection
 	/// Token to cancel an operation.
 	/// </param>
 	/// <remarks>
-	/// This method blocks current thread until either all items are found by key
-	/// or current map is completed by <see cref="ICompletableCollection.Complete"/> method.
+	/// This method blocks current thread until either
+	/// all items are found by keys
+	/// or current map is completed by <see cref="ICompletableCollection.Complete"/> method
+	/// or cancellation is requested.
 	/// </remarks>
 	IEnumerable<TValue> GetAndRemoveAllByKeys(IEnumerable<TKey> keys, CancellationToken cancellationToken = default);
 }

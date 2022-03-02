@@ -28,7 +28,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
-		<PackageReference Include="TypeDecorators" Version="1.0.2" />
+		<PackageReference Include="TypeDecorators" Version="1.1.0" />
 	</ItemGroup>
 
 </Project>

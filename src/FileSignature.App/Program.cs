@@ -34,7 +34,6 @@ internal static class Program
 	private static void RegisterServices(IServiceCollection services)
 		=> services
 			.AddSingleton<IInputReader, InputReader>()
-			.AddSingleton<ILifetimeManager, HostLifetimeManager>()
 			.AddSingleton<IWorkScheduler, ThreadWorkScheduler>()
 			.AddSingleton<ISignatureGenerator, SignatureGenerator>();
 }
